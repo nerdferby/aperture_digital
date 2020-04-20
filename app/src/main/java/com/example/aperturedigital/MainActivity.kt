@@ -12,6 +12,16 @@ import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
+    /**
+     * For Critical version(V.1)
+     * TODO: Tidy up Api connection
+     * TODO: Get modules working instead of Directories
+     * TODO: Fix the return of the api to allow for every product return
+     * TODO: Connect to a database so it reduces the amount of api calls
+     * TODO: Barcode scanner
+     * TODO: Vegan determine algorithm
+     */
+
     lateinit var apiCall: ApiCall
     val debugTag = "DebugApi"
 
