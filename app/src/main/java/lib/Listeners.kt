@@ -1,20 +1,22 @@
 package lib
 
-class Listeners {
-    private val onCallBackMainListener = mutableListOf<CallbackToMainListener>()
+import org.json.JSONObject
 
-    fun addCallBackToMain(listener: CallbackToMainListener){
-        onCallBackMainListener.add(listener)
+class Listeners {
+    private val onApiChangeListeners = mutableListOf<ApiChangeListener>()
+
+    fun addApiChangeListener(listener: ApiChangeListener){
+        onApiChangeListeners.add(listener)
     }
 
-    fun fireCallBackToMain(response: String){
-        onCallBackMainListener.forEach{
-            it.updateText(response)
+    fun fireApiChangeListener(response: JSONObject){
+        onApiChangeListeners.forEach{
+            it.onApiChange(response)
         }
     }
+}
 
-    interface CallbackToMainListener{
-        fun updateText(text: String)
-    }
 
+interface ApiChangeListener {
+    fun onApiChange(response: JSONObject)
 }

@@ -24,6 +24,8 @@ class LensFragment: Fragment(){
     val debugTag = "DebugApi"
     private lateinit var currentContext: Context
     private lateinit var rootView: View
+    val listenerClass = Listeners()
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -44,12 +46,13 @@ class LensFragment: Fragment(){
         val decryptedString = encrypClass.decryptString(getString(R.string.subKey), currentContext)
         val params = HashMap<String, String>()
         params["gtin"] = barcode
-        apiCall = ApiCall("dev.tescolabs.com", params, currentContext, decryptedString)
-        apiCall.setApiChangeListener(listenerInp)
+        apiCall = ApiCall("dev.tescolabs.com", params, currentContext, decryptedString, listenerClass)
+//        apiCall.setApiChangeListener(listenerInp)
+        listenerClass.addApiChangeListener(listenerInp)
     }
 
-    private var listenerInp = object: ApiChangeListener {
-        override fun onApiChange(apiCall: ApiCall, response: JSONObject) {
+    private var listenerInp = object: lib.ApiChangeListener {
+        override fun onApiChange(response: JSONObject) {
             val finalData = getApiData(response)
             var finalString: String = ""
             for (i in 0 until finalData.count()){
@@ -57,7 +60,6 @@ class LensFragment: Fragment(){
                 Log.d(debugTag, finalData[i])
             }
             updateText(finalString)
-
         }
     }
 
@@ -69,7 +71,7 @@ class LensFragment: Fragment(){
 
     fun getApiData(response: JSONObject): MutableList<String>{
         val responseMinimal: JSONArray = response["products"] as JSONArray
-        var pairs: JSONObject = JSONObject()
+        var pairs = JSONObject()
         for(i in 0 until responseMinimal.length()){
             pairs = responseMinimal.getJSONObject(i)
         }

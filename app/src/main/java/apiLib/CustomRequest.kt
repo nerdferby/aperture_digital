@@ -6,13 +6,15 @@ import android.util.Log
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import lib.Listeners
 import org.json.JSONObject
 
-class CustomRequest(apiCall: ApiCall) {
+class CustomRequest(apiCall: ApiCall, listeners: Listeners) {
     var baseUrl: String = ""
     var params: HashMap<String, String> = hashMapOf()
     val localApiCall: ApiCall = apiCall
     lateinit var subKey: String
+    val localListener = listeners
 
     fun buildUrl(): String {
         val builder = Uri.Builder()
@@ -35,8 +37,8 @@ class CustomRequest(apiCall: ApiCall) {
         val queue = Volley.newRequestQueue(context)
 
         val jsonRequest = object : JsonObjectRequest(Method.GET, url, null,
-            Response.Listener<JSONObject> {response ->
-                localApiCall.fireApiChange(response)
+            Response.Listener { response ->
+                localListener.fireApiChangeListener(response)
             },
             Response.ErrorListener {error ->
                 Log.d("A", "/post request fail! Error: ${error.printStackTrace()}")
