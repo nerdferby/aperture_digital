@@ -6,12 +6,11 @@ import org.json.JSONObject
 
 class ApiCall(baseUrl: String, paramsPassed: HashMap<String, String>, context: Context, subKey: String, listenerClass: Listeners) {
     private val listenerClassLocal = listenerClass
-    var request: CustomRequest = CustomRequest(this, listenerClassLocal)
+    var request: CustomRequest = CustomRequest(listenerClassLocal)
     private val key: String = subKey
     private val activityContext: Context = context
     private val url: String = baseUrl
     private val prams: HashMap<String, String> = paramsPassed
-    var onApiChangeListener: ApiChangeListener? = null
 
     init {
         apiRequest()

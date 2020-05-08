@@ -7,12 +7,10 @@ import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import lib.Listeners
-import org.json.JSONObject
 
-class CustomRequest(apiCall: ApiCall, listeners: Listeners) {
+class CustomRequest(listeners: Listeners) {
     var baseUrl: String = ""
     var params: HashMap<String, String> = hashMapOf()
-    val localApiCall: ApiCall = apiCall
     lateinit var subKey: String
     val localListener = listeners
 
