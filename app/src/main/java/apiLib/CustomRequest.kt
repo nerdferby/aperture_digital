@@ -16,17 +16,30 @@ class CustomRequest(listeners: Listeners) {
 
     fun buildUrl(): String {
         val builder = Uri.Builder()
+        var gtinNeeded = true
         if (baseUrl == "dev.tescolabs.com"){
             builder.scheme("https")
                 .authority(baseUrl)
                 .appendEncodedPath("product/")
-        }else{
+        }else if(baseUrl == "world.openfoodfacts.org"){
+            gtinNeeded = false
+            builder.scheme("https")
+                .authority(baseUrl)
+                .appendEncodedPath("api")
+                .appendEncodedPath("v0")
+                .appendEncodedPath("product/")
+                .appendEncodedPath(params["gtin"])
+        }
+
+        else{
             builder.scheme("https")
                 .authority(baseUrl)
         }
 
         for ((k, v) in params) {
-            builder.appendQueryParameter(k, v)
+            if (gtinNeeded){
+                builder.appendQueryParameter(k, v)
+            }
         }
         return builder.build().toString()
     }

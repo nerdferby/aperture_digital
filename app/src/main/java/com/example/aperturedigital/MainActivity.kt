@@ -3,19 +3,10 @@ package com.example.aperturedigital
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import apiLib.ApiCall
-import apiLib.ApiChangeListener
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import kotlinx.android.synthetic.main.activity_main.*
-import lib.Encryption
-import lib.Listeners
-import org.json.JSONArray
-import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
@@ -68,11 +59,13 @@ class MainActivity : AppCompatActivity() {
         }
     })
 
+    //this hides / shows the excess menus if the top has been scrolled down
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) hideSystemUI()
     }
 
+    //this hides the excess menus on phones such as the bottom bar
     @SuppressLint("InlinedApi")
     private fun hideSystemUI() {
         window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE

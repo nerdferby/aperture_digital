@@ -1,17 +1,19 @@
 package com.example.aperturedigital
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
 import apiLib.ApiCall
-import apiLib.ApiChangeListener
-import kotlinx.android.synthetic.main.activity_main.*
 import lib.Encryption
 import lib.Listeners
 import org.json.JSONArray
@@ -26,19 +28,32 @@ class LensFragment: Fragment(){
     private lateinit var rootView: View
     val listenerClass = Listeners()
 
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.fragment_lens, container, false)
 
-
+        val scannerBtn = (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
+        scannerBtn.setOnClickListener {
+            //start barcode scanner
+        }
 //        tescoApiCall("5057373701954")
+//        updateText("Lens TEST")
+        openFoodApi("5057373701954")
         return rootView
     }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         currentContext = context
+    }
+
+    private fun openFoodApi(barcode: String){
+        val params = HashMap<String, String>()
+        params["gtin"] = barcode
+        ///api/v0/product/
+        apiCall = ApiCall("world.openfoodfacts.org", params, currentContext, "", listenerClass)
+        listenerClass.addApiChangeListener(listenerInp)
+
     }
 
     fun tescoApiCall(barcode: String){
@@ -53,7 +68,12 @@ class LensFragment: Fragment(){
 
     private var listenerInp = object: lib.ApiChangeListener {
         override fun onApiChange(response: JSONObject) {
-            val finalData = getApiData(response)
+            var finalData = mutableListOf<String>()
+            if (response.has("products")){
+                finalData = getApiData(response)
+            }else{
+                finalData = getWorldFoodApiData(response)
+            }
             var finalString: String = ""
             for (i in 0 until finalData.count()){
                 finalString += finalData[i] + "\n" + "\n"
@@ -66,7 +86,51 @@ class LensFragment: Fragment(){
     fun updateText(responseText: String){
         val barcodeText = TextView(currentContext)
         barcodeText.text = responseText
+        barcodeText.textSize = 20f
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            if (barcodeText.id == -1){
+                barcodeText.id = View.generateViewId()
+            }
+        }
+        (rootView as ViewGroup).removeAllViews()
         (rootView as ViewGroup).addView(barcodeText)
+        barcodeText.gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
+
+        val set = ConstraintSet()
+        set.clone((rootView as ViewGroup).findViewById<ConstraintLayout>(R.id.constraintLayoutContent))
+        set.connect(barcodeText.id,
+            ConstraintSet.TOP,
+            ConstraintSet.PARENT_ID,
+            ConstraintSet.TOP
+        )
+        set.connect(
+            barcodeText.id,
+            ConstraintSet.RIGHT,
+            ConstraintSet.PARENT_ID,
+            ConstraintSet.RIGHT
+        )
+        set.connect(
+            barcodeText.id,
+            ConstraintSet.LEFT,
+            ConstraintSet.PARENT_ID,
+            ConstraintSet.LEFT
+        )
+        set.connect(
+            barcodeText.id,
+            ConstraintSet.BOTTOM,
+            ConstraintSet.PARENT_ID,
+            ConstraintSet.BOTTOM
+        )
+
+        set.applyTo((rootView as ViewGroup).findViewById(R.id.constraintLayoutContent))
+    }
+
+    fun getWorldFoodApiData(response: JSONObject): MutableList<String>{
+        val responseMinimal: JSONObject = response.get("product") as JSONObject
+        val name = responseMinimal["product_name"].toString()
+        val ingredients = responseMinimal["ingredients_text_en"].toString()
+        val keyWords = responseMinimal["_keywords"].toString()
+        return mutableListOf(name, ingredients, keyWords)
     }
 
     fun getApiData(response: JSONObject): MutableList<String>{
@@ -108,6 +172,4 @@ class LensFragment: Fragment(){
         }
         return finalData
     }
-
-
 }

@@ -2,19 +2,21 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/constraintLayoutContent"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/holo_blue_light">
+    <!--Barcode scanner goes in here-->
 
-    <TextView
-        android:id="@+id/testText"
+    <Button
+        android:id="@+id/startBarcodeScannerBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Lens Fragment"
-        android:textSize="30sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="Start Barcode \n Scanner"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
