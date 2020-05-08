@@ -1,12 +1,11 @@
 package com.example.aperturedigital
 
+import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.Switch
+import android.view.View
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import apiLib.ApiCall
@@ -14,6 +13,7 @@ import apiLib.ApiChangeListener
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main.*
 import lib.Encryption
+import lib.Listeners
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -29,11 +29,6 @@ class MainActivity : AppCompatActivity() {
      * TODO: Vegan determine algorithm
      */
 
-    lateinit var apiCall: ApiCall
-    val debugTag = "DebugApi"
-
-    lateinit var encrypClass: Encryption
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -41,10 +36,9 @@ class MainActivity : AppCompatActivity() {
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_nav)
 
         bottomNav.setOnNavigationItemSelectedListener(navListener)
-
-        supportFragmentManager.beginTransaction().replace(R.id.constraintLayoutMainContent,
+        bottomNav.selectedItemId = R.id.nav_lens
+        supportFragmentManager.beginTransaction().replace(R.id.constraintLayoutFragment,
         LensFragment()).commit()
-//        tescoApiCall("5057373701954") //TODO: change to barcode scan return later
     }
 
     private val navListener = BottomNavigationView.OnNavigationItemSelectedListener(object: (MenuItem) ->
@@ -68,83 +62,24 @@ class MainActivity : AppCompatActivity() {
                     selectedFragment = SettingsFragment()
                 }
             }
-            supportFragmentManager.beginTransaction().replace(R.id.constraintLayoutMainContent,
+            supportFragmentManager.beginTransaction().replace(R.id.constraintLayoutFragment,
                 selectedFragment!!).commit()
             return true
         }
     })
 
-    fun tescoApiCall(barcode: String){
-        encrypClass = Encryption()
-
-        val decryptedString = encrypClass.decryptString(getString(R.string.subKey), this)
-
-        val params = HashMap<String, String>()
-        val barcodeNum = barcode
-
-        params.put("gtin", barcodeNum)
-        apiCall = ApiCall("dev.tescolabs.com", params, this, decryptedString)
-        apiCall.setApiChangeListener(listenerInp)
-
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideSystemUI()
     }
 
-    private var listenerInp = object: ApiChangeListener {
-        override fun onApiChange(apiCall: ApiCall, response: JSONObject) {
-            val finalData = getApiData(response)
-            var finalString: String = ""
-            for (i in 0 until finalData.count()){
-                finalString += finalData[i] + "\n" + "\n"
-                Log.d(debugTag, finalData[i])
-            }
-            updateText(finalString)
-//            val text: TextView = findViewById(R.id.textView)
-//            text.text = finalString
-        }
-    }
-
-    fun updateText(responseText: String){
-        val barcodeText = TextView(applicationContext)
-        barcodeText.text = responseText
-        constraintLayoutMainContent.addView(barcodeText)
-    }
-
-    fun getApiData(response: JSONObject): MutableList<String>{
-        val responseMinimal: JSONArray = response["products"] as JSONArray
-        var pairs: JSONObject = JSONObject()
-        for(i in 0 until responseMinimal.length()){
-            pairs = responseMinimal.getJSONObject(i)
-        }
-        /**
-         * gtin -aka barcode num
-         * description
-         * brand -not so important
-         * ingredients
-         * productAttributes -> 1 to get to lifestyle
-         */
-        var finalData: MutableList<String> = mutableListOf()
-        finalData.add(pairs["gtin"].toString())
-        finalData.add(pairs["description"].toString())
-        finalData.add(pairs["brand"].toString())
-        finalData.add(pairs["ingredients"].toString())
-        val lifeStyle = pairs["productAttributes"] as JSONArray
-        var lifeStyleValue: Any
-        if (lifeStyle.length() > 1){
-            //Tesco api to find the lifestyle value is embedded about 8 times,
-            //causing this monstrosity
-
-            lifeStyleValue = lifeStyle[1] as JSONObject
-            lifeStyleValue = lifeStyleValue["category"] as JSONArray
-            lifeStyleValue = lifeStyleValue[0] as JSONObject
-            lifeStyleValue = lifeStyleValue as JSONObject
-            if(lifeStyleValue.has("lifestyle")){
-                lifeStyleValue = lifeStyleValue["lifestyle"] as JSONArray
-                lifeStyleValue = lifeStyleValue[0] as JSONObject
-                lifeStyleValue = lifeStyleValue["lifestyle"] as JSONObject
-                lifeStyleValue = lifeStyleValue["value"]
-            }
-
-            finalData.add(lifeStyleValue.toString())
-        }
-        return finalData
+    @SuppressLint("InlinedApi")
+    private fun hideSystemUI() {
+        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
+                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN)
     }
 }

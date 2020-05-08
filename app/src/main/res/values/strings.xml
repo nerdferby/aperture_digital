@@ -1,5 +1,13 @@
 <resources>
     <string name="app_name">ApertureDigital</string>
+
+    <string name="icon_News">News</string>
+    <string name="icon_History">History</string>
+    <string name="icon_Lens">Lens</string>
+    <string name="icon_Search">Search</string>
+    <string name="icon_Settings">Settings</string>
+
+
     <string name="footerNewsBtnDescription">News Button</string>
     <string name="footerHistoryBtnDescription">History Button</string>
     <string name="footerLensBtnDescription">Lens Button</string>

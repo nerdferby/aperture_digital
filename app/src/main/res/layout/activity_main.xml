@@ -7,12 +7,25 @@
     tools:context=".MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayoutMainContent"
+        android:id="@+id/constraintLayoutFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/coordinatorLayout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayoutContent"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <!--Barcode scanner goes in here-->
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
 
         <!--Barcode scanner goes in here-->
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -22,7 +35,7 @@
         android:id="@+id/coordinatorLayout"
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
-        app:layout_constraintTop_toBottomOf="@+id/constraintLayoutMainContent"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayoutFragment"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -33,7 +46,6 @@
             android:layout_height="?attr/actionBarSize"
             app:menu="@menu/bottom_nav"
             android:background="?android:attr/windowBackground"/>
-
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
