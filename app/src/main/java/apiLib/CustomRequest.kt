@@ -16,9 +16,15 @@ class CustomRequest(apiCall: ApiCall) {
 
     fun buildUrl(): String {
         val builder = Uri.Builder()
-        builder.scheme("https")
-            .authority(baseUrl)
-            .appendEncodedPath("product/")
+        if (baseUrl == "dev.tescolabs.com"){
+            builder.scheme("https")
+                .authority(baseUrl)
+                .appendEncodedPath("product/")
+        }else{
+            builder.scheme("https")
+                .authority(baseUrl)
+        }
+
         for ((k, v) in params) {
             builder.appendQueryParameter(k, v)
         }
@@ -37,9 +43,12 @@ class CustomRequest(apiCall: ApiCall) {
             })
         {
             override fun getHeaders(): MutableMap<String, String> {
-                val headers = HashMap<String, String>()
-                headers["Ocp-Apim-Subscription-Key"] = subKey
-                return headers
+                if (subKey != ""){
+                    val headers = HashMap<String, String>()
+                    headers["Ocp-Apim-Subscription-Key"] = subKey
+                    return headers
+                }
+                return HashMap()
             }
         }
 
