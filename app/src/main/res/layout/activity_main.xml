@@ -7,7 +7,7 @@
     tools:context=".MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout2"
+        android:id="@+id/constraintLayoutMainContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/coordinatorLayout"
@@ -22,63 +22,17 @@
         android:id="@+id/coordinatorLayout"
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
-        app:layout_constraintTop_toBottomOf="@+id/constraintLayout2"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayoutMainContent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <com.google.android.material.bottomappbar.BottomAppBar
-            android:id="@+id/bottom_app_bar"
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_nav"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:layout_gravity="bottom"
-            app:backgroundTint="@color/colorPrimary">
-            <!--            app:fabAlignmentMode="center"-->
-            <!--            app:fabAttached="true"-->
-            <!--            app:navigationIcon="@drawable/baseline_menu_white_24"/>-->
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-
-                <ImageButton
-                    android:layout_width="80dp"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="2dp"
-                    android:background="@drawable/news_icon" />
-
-                <ImageView
-                    android:layout_width="80dp"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="2dp"
-                    android:src="@drawable/search_icon" />
-
-                <ImageButton
-                    android:id="@+id/LensBtn"
-                    android:layout_width="60dp"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="2dp"
-
-                    android:background="@drawable/lens_icon" />
-
-                <ImageView
-                    android:layout_width="80dp"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="2dp"
-                    android:src="@drawable/history_icon" />
-
-                <ImageView
-                    android:layout_width="80dp"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="2dp"
-
-                    android:src="@drawable/settings_icon" />
-
-            </LinearLayout>
-        </com.google.android.material.bottomappbar.BottomAppBar>
+            app:menu="@menu/bottom_nav"
+            android:background="?android:attr/windowBackground"/>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

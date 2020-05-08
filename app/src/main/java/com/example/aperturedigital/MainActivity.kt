@@ -3,11 +3,15 @@ package com.example.aperturedigital
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.Switch
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import apiLib.ApiCall
 import apiLib.ApiChangeListener
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main.*
 import lib.Encryption
 import org.json.JSONArray
@@ -33,12 +37,42 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_nav)
+
+        bottomNav.setOnNavigationItemSelectedListener(navListener)
+
+        supportFragmentManager.beginTransaction().replace(R.id.constraintLayoutMainContent,
+        LensFragment()).commit()
 //        tescoApiCall("5057373701954") //TODO: change to barcode scan return later
-        val lens = findViewById<ImageButton>(R.id.LensBtn)
-        lens.setOnClickListener {
-            Log.d("test", "Lens Clicked")
-        }
     }
+
+    private val navListener = BottomNavigationView.OnNavigationItemSelectedListener(object: (MenuItem) ->
+    Boolean {
+        override fun invoke(item: MenuItem): Boolean {
+            var selectedFragment: Fragment? = null
+            when(item.itemId){
+                R.id.nav_history -> {
+                    selectedFragment = HistoryFragment()
+                }
+                R.id.nav_lens -> {
+                    selectedFragment = LensFragment()
+                }
+                R.id.nav_news -> {
+                    selectedFragment = NewsFragment()
+                }
+                R.id.nav_search -> {
+                    selectedFragment = SearchFragment()
+                }
+                R.id.nav_settings -> {
+                    selectedFragment = SettingsFragment()
+                }
+            }
+            supportFragmentManager.beginTransaction().replace(R.id.constraintLayoutMainContent,
+                selectedFragment!!).commit()
+            return true
+        }
+    })
 
     fun tescoApiCall(barcode: String){
         encrypClass = Encryption()
@@ -56,7 +90,7 @@ class MainActivity : AppCompatActivity() {
 
     private var listenerInp = object: ApiChangeListener {
         override fun onApiChange(apiCall: ApiCall, response: JSONObject) {
-            val finalData = getApidata(response)
+            val finalData = getApiData(response)
             var finalString: String = ""
             for (i in 0 until finalData.count()){
                 finalString += finalData[i] + "\n" + "\n"
@@ -71,10 +105,10 @@ class MainActivity : AppCompatActivity() {
     fun updateText(responseText: String){
         val barcodeText = TextView(applicationContext)
         barcodeText.text = responseText
-        constraintLayout2.addView(barcodeText)
+        constraintLayoutMainContent.addView(barcodeText)
     }
 
-    fun getApidata(response: JSONObject): MutableList<String>{
+    fun getApiData(response: JSONObject): MutableList<String>{
         val responseMinimal: JSONArray = response["products"] as JSONArray
         var pairs: JSONObject = JSONObject()
         for(i in 0 until responseMinimal.length()){
@@ -93,24 +127,23 @@ class MainActivity : AppCompatActivity() {
         finalData.add(pairs["brand"].toString())
         finalData.add(pairs["ingredients"].toString())
         val lifeStyle = pairs["productAttributes"] as JSONArray
-        var lifeStylevalue: Any
+        var lifeStyleValue: Any
         if (lifeStyle.length() > 1){
             //Tesco api to find the lifestyle value is embedded about 8 times,
             //causing this monstrosity
 
-            lifeStylevalue = lifeStyle[1] as JSONObject
-            lifeStylevalue = lifeStylevalue["category"] as JSONArray
-            lifeStylevalue = lifeStylevalue[0] as JSONObject
-            lifeStylevalue = lifeStylevalue as JSONObject
-            if(lifeStylevalue.has("lifestyle")){
-                lifeStylevalue = lifeStylevalue["lifestyle"] as JSONArray
-                lifeStylevalue = lifeStylevalue[0] as JSONObject
-                lifeStylevalue = lifeStylevalue["lifestyle"] as JSONObject
-                lifeStylevalue = lifeStylevalue["value"]
+            lifeStyleValue = lifeStyle[1] as JSONObject
+            lifeStyleValue = lifeStyleValue["category"] as JSONArray
+            lifeStyleValue = lifeStyleValue[0] as JSONObject
+            lifeStyleValue = lifeStyleValue as JSONObject
+            if(lifeStyleValue.has("lifestyle")){
+                lifeStyleValue = lifeStyleValue["lifestyle"] as JSONArray
+                lifeStyleValue = lifeStyleValue[0] as JSONObject
+                lifeStyleValue = lifeStyleValue["lifestyle"] as JSONObject
+                lifeStyleValue = lifeStyleValue["value"]
             }
 
-
-            finalData.add(lifeStylevalue.toString())
+            finalData.add(lifeStyleValue.toString())
         }
         return finalData
     }
