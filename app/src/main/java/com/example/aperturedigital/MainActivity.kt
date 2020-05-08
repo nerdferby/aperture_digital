@@ -3,9 +3,12 @@ package com.example.aperturedigital
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import apiLib.ApiCall
 import apiLib.ApiChangeListener
+import kotlinx.android.synthetic.main.activity_main.*
 import lib.Encryption
 import org.json.JSONArray
 import org.json.JSONObject
@@ -30,7 +33,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        tescoApiCall("5057373701954") //TODO: change to barcode scan return later
+//        tescoApiCall("5057373701954") //TODO: change to barcode scan return later
+        val lens = findViewById<ImageButton>(R.id.LensBtn)
+        lens.setOnClickListener {
+            Log.d("test", "Lens Clicked")
+        }
     }
 
     fun tescoApiCall(barcode: String){
@@ -55,9 +62,16 @@ class MainActivity : AppCompatActivity() {
                 finalString += finalData[i] + "\n" + "\n"
                 Log.d(debugTag, finalData[i])
             }
-            val text: TextView = findViewById(R.id.textView)
-            text.text = finalString
+            updateText(finalString)
+//            val text: TextView = findViewById(R.id.textView)
+//            text.text = finalString
         }
+    }
+
+    fun updateText(responseText: String){
+        val barcodeText = TextView(applicationContext)
+        barcodeText.text = responseText
+        constraintLayout2.addView(barcodeText)
     }
 
     fun getApidata(response: JSONObject): MutableList<String>{
