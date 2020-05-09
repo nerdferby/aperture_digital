@@ -1,6 +1,8 @@
 package com.example.aperturedigital
 
+import android.app.Activity.RESULT_OK
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +16,8 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
 import apiLib.ApiCall
+import barcodescanner.BarcodeScanner
+import com.google.android.gms.samples.vision.barcodereader.BarcodeCapture
 import lib.Constants
 import lib.Encryption
 import lib.Listeners
@@ -31,17 +35,24 @@ class LensFragment: Fragment(){
     val constantClass = Constants()
     var currentBarcode = ""
     private var productCheckIndex = 0
+    val barcodeFragmentLocal = BarcodeFragment(listenerClass)
+    lateinit var scannerBtn: Button
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.fragment_lens, container, false)
         currentBarcode = "5057373701954"
         //5057373701954
-        val scannerBtn = (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
+        scannerBtn= (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
         scannerBtn.setOnClickListener {
-            //start barcode scanner
-            checkApis(currentBarcode)
 
+            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
+            scannerBtn.visibility = View.INVISIBLE
+//            activity!!.supportFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
+            //start barcode scanner
+//            checkApis(currentBarcode)
+
+//            startBarcode()
         }
         return rootView
     }
@@ -49,6 +60,30 @@ class LensFragment: Fragment(){
     override fun onAttach(context: Context) {
         super.onAttach(context)
         currentContext = context
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode == RESULT_OK){
+            if (data != null){
+                currentBarcode = data!!.getStringExtra("gtin")
+                activity!!.runOnUiThread{
+                    //change to the actual api calls
+                    apiCalls(currentBarcode)
+                }
+            }
+        }
+    }
+
+    private fun apiCalls(barcode: String) {
+        if (this.childFragmentManager.fragments.size > 0){
+            this.childFragmentManager.beginTransaction().remove(
+                this.childFragmentManager.fragments[0]).commit()
+
+        }
+        updateText(barcode)
+//        scannerBtn.visibility = View.VISIBLE
     }
 
     private fun checkApis(barcode: String){
@@ -126,7 +161,7 @@ class LensFragment: Fragment(){
                 barcodeText.id = View.generateViewId()
             }
         }
-        (rootView as ViewGroup).removeAllViews()
+//        (rootView as ViewGroup).removeAllViews()
         (rootView as ViewGroup).addView(barcodeText)
         barcodeText.gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
 
@@ -157,6 +192,7 @@ class LensFragment: Fragment(){
         )
 
         set.applyTo((rootView as ViewGroup).findViewById(R.id.constraintLayoutContent))
+        rootView.invalidate()
     }
 
     fun getWorldFoodApiData(response: JSONObject): MutableList<String>{
