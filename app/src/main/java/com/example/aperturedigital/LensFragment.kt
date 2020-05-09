@@ -14,6 +14,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
 import apiLib.ApiCall
+import lib.Constants
 import lib.Encryption
 import lib.Listeners
 import org.json.JSONArray
@@ -27,18 +28,21 @@ class LensFragment: Fragment(){
     private lateinit var currentContext: Context
     private lateinit var rootView: View
     val listenerClass = Listeners()
+    val constantClass = Constants()
+    var currentBarcode = ""
+    private var productCheckIndex = 0
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.fragment_lens, container, false)
-
+        currentBarcode = "5057373701954"
+        //5057373701954
         val scannerBtn = (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
         scannerBtn.setOnClickListener {
             //start barcode scanner
+            checkApis(currentBarcode)
+
         }
-//        tescoApiCall("5057373701954")
-//        updateText("Lens TEST")
-        openFoodApi("5057373701954")
         return rootView
     }
 
@@ -47,10 +51,21 @@ class LensFragment: Fragment(){
         currentContext = context
     }
 
+    private fun checkApis(barcode: String){
+        //this checks through both apis
+        if(productCheckIndex == 0){
+            openFoodApi(barcode)
+        }else if(productCheckIndex == 1){
+            tescoApiCall(barcode)
+        }else{
+            updateText("No product was found")
+        }
+
+    }
+
     private fun openFoodApi(barcode: String){
         val params = HashMap<String, String>()
         params["gtin"] = barcode
-        ///api/v0/product/
         apiCall = ApiCall("world.openfoodfacts.org", params, currentContext, "", listenerClass)
         listenerClass.addApiChangeListener(listenerInp)
 
@@ -68,18 +83,37 @@ class LensFragment: Fragment(){
 
     private var listenerInp = object: lib.ApiChangeListener {
         override fun onApiChange(response: JSONObject) {
+            var responseLocation = ""
             var finalData = mutableListOf<String>()
+            var localPassed = false
             if (response.has("products")){
-                finalData = getApiData(response)
+                if (response["products"].toString() == "[]"){
+                    productCheckIndex++
+                    checkApis(currentBarcode)
+                }else{
+                    finalData = getApiData(response)
+                    responseLocation = "Tesco"
+                }
             }else{
-                finalData = getWorldFoodApiData(response)
+                if (!(response["product"] as JSONObject).has("product_name")){
+                    //product was not found
+                    productCheckIndex++
+                    checkApis(currentBarcode)
+                }else{
+                    localPassed = true
+                    finalData = getWorldFoodApiData(response)
+                    responseLocation = "World"
+
+                }
             }
-            var finalString: String = ""
-            for (i in 0 until finalData.count()){
-                finalString += finalData[i] + "\n" + "\n"
-                Log.d(debugTag, finalData[i])
+            if(localPassed){
+                var finalString: String = ""
+                for (i in 0 until finalData.count()){
+                    finalString += finalData[i] + "\n" + "\n"
+                    Log.d(constantClass.DEBUGTAG, finalData[i])
+                }
+                updateText(finalString)
             }
-            updateText(finalString)
         }
     }
 
