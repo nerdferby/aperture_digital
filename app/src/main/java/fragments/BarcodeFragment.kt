@@ -1,4 +1,4 @@
-package com.example.aperturedigital
+package fragments
 
 import android.app.Activity.RESULT_OK
 import android.content.Context
@@ -8,11 +8,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import barcodescanner.BarcodeScanner
+import com.example.aperturedigital.R
 import com.google.android.gms.samples.vision.barcodereader.BarcodeCapture
-import kotlinx.android.synthetic.main.fragment_barcode_scanner.*
 import lib.Constants
 import lib.Listeners
 

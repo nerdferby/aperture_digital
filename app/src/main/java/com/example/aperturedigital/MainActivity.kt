@@ -7,6 +7,7 @@ import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import fragments.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -29,7 +30,8 @@ class MainActivity : AppCompatActivity() {
         bottomNav.setOnNavigationItemSelectedListener(navListener)
         bottomNav.selectedItemId = R.id.nav_lens
         supportFragmentManager.beginTransaction().replace(R.id.constraintLayoutFragment,
-        LensFragment()).commit()
+            LensFragment()
+        ).commit()
     }
 
     private val navListener = BottomNavigationView.OnNavigationItemSelectedListener(object: (MenuItem) ->

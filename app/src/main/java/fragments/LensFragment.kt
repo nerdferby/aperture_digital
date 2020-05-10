@@ -1,4 +1,4 @@
-package com.example.aperturedigital
+package fragments
 
 import android.app.Activity.RESULT_OK
 import android.content.Context
@@ -16,8 +16,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
 import apiLib.ApiCall
-import barcodescanner.BarcodeScanner
-import com.google.android.gms.samples.vision.barcodereader.BarcodeCapture
+import com.example.aperturedigital.R
 import lib.Constants
 import lib.Encryption
 import lib.Listeners
@@ -45,14 +44,8 @@ class LensFragment: Fragment(){
         //5057373701954
         scannerBtn= (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
         scannerBtn.setOnClickListener {
-
             this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
             scannerBtn.visibility = View.INVISIBLE
-//            activity!!.supportFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
-            //start barcode scanner
-//            checkApis(currentBarcode)
-
-//            startBarcode()
         }
         return rootView
     }
@@ -64,7 +57,6 @@ class LensFragment: Fragment(){
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
         if (resultCode == RESULT_OK){
             if (data != null){
                 currentBarcode = data!!.getStringExtra("gtin")
@@ -80,7 +72,6 @@ class LensFragment: Fragment(){
         if (this.childFragmentManager.fragments.size > 0){
             this.childFragmentManager.beginTransaction().remove(
                 this.childFragmentManager.fragments[0]).commit()
-
         }
         updateText(barcode)
 //        scannerBtn.visibility = View.VISIBLE
@@ -103,7 +94,6 @@ class LensFragment: Fragment(){
         params["gtin"] = barcode
         apiCall = ApiCall("world.openfoodfacts.org", params, currentContext, "", listenerClass)
         listenerClass.addApiChangeListener(listenerInp)
-
     }
 
     fun tescoApiCall(barcode: String){
@@ -112,7 +102,6 @@ class LensFragment: Fragment(){
         val params = HashMap<String, String>()
         params["gtin"] = barcode
         apiCall = ApiCall("dev.tescolabs.com", params, currentContext, decryptedString, listenerClass)
-//        apiCall.setApiChangeListener(listenerInp)
         listenerClass.addApiChangeListener(listenerInp)
     }
 
@@ -161,7 +150,7 @@ class LensFragment: Fragment(){
                 barcodeText.id = View.generateViewId()
             }
         }
-//        (rootView as ViewGroup).removeAllViews()
+        (rootView as ViewGroup).removeAllViews()
         (rootView as ViewGroup).addView(barcodeText)
         barcodeText.gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
 
