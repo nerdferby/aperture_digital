@@ -7,66 +7,81 @@ class VeganDetermination {
         const val UNKNOWN = 2
 
         private val nonVeganIngredients = arrayOf(
-            "Beef",
-            "Lamb",
-            "Pork",
-            "Horse",
-            "Duck",
-            "Chicken",
-            "Turkey",
-            "Goose",
-            "Quail",
-            "Fish",
-            "Anchovy",
-            "Anchovies",
-            "Shrimp",
-            "Squid",
-            "Scallop",
-            "Scallops",
-            "Calamari",
-            "Mussels",
-            "Milk",
-            "Milk fat",
-            "Milk solids",
-            "Milk powder",
-            "Yoghurt",
-            "Cheese",
-            "Butter",
-            "Cream",
-            "Ice cream",
-            "Egg",
-            "Egg white",
-            "Albumen",
-            "Honey",
-            "Bee pollen",
-            "Royal jelly",
-            "E120",
-            "E322",
-            "E422",
-            "E471",
-            "E542",
-            "E631",
-            "E901",
-            "E904",
-            "Cochineal",
-            "Carmine",
-            "Gelatin",
-            "Isinglass",
-            "Castoreum",
-            "Shellac",
-            "Whey",
-            "Casein",
-            "Lactose",
-            "Animal fat",
-            "Bone",
-            "Bone char",
-            "Beeswax",
-            "Shellac"
+            "beef",
+            "lamb",
+            "pork",
+            "horse",
+            "duck",
+            "chicken",
+            "turkey",
+            "goose",
+            "quail",
+            "fish",
+            "anchovy",
+            "anchovies",
+            "shrimp",
+            "squid",
+            "scallop",
+            "scallops",
+            "calamari",
+            "mussels",
+            "milk",
+            "milk fat",
+            "milk solids",
+            "milk powder",
+            "yoghurt",
+            "cheese",
+            "butter",
+            "cream",
+            "ice cream",
+            "egg",
+            "egg white",
+            "albumen",
+            "honey",
+            "bee pollen",
+            "royal jelly",
+            "e120",
+            "e322",
+            "e422",
+            "e471",
+            "e542",
+            "e631",
+            "e901",
+            "e904",
+            "cochineal",
+            "carmine",
+            "gelatin",
+            "isinglass",
+            "castoreum",
+            "shellac",
+            "whey",
+            "casein",
+            "lactose",
+            "animal fat",
+            "bone",
+            "bone char",
+            "beeswax",
+            "shellac"
         )
 
         private val potentiallyVeganIngredients = arrayOf(
-            "Vitamin D3", //unless from lichen
-            "Omega-3" //unless from algae
+            "vitamin D3", //unless from lichen
+            "omega-3" //unless from algae
+        )
+
+        private val potentiallyVeganTypes = mapOf(
+            Pair("vitamin D3", arrayOf(
+                "cholecalciferol"
+            )),
+            Pair("omega-3", arrayOf(
+                "algea",
+                "nut",
+                "seed",
+                "flax",
+                "chia",
+                "spirulina",
+                "chlorella"
+            ))
         )
 
         /*
@@ -97,10 +112,20 @@ class VeganDetermination {
             return false
         }
 
+        /*
+            Finds potentially vegan ingredients and checks them against the types that are vegan for that ingredient
+         */
         private fun isMaybeNotVegan(ingredients: Array<String>): Boolean {
+            val maybeIngredients = ArrayList<String>()
             for(ingredient in ingredients){
                 if(ingredient in potentiallyVeganIngredients){
-                    return true
+                    maybeIngredients.add(ingredient)
+                }
+            }
+
+            for(ingredient in maybeIngredients){
+                if(ingredient in potentiallyVeganTypes){
+                    TODO("Complete logic, test the ingredient exists in the potentiallyVeganTypes")
                 }
             }
 
