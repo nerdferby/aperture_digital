@@ -2,7 +2,10 @@ package fragments
 
 import android.app.Activity.RESULT_OK
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
+import android.content.SharedPreferences
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -14,11 +17,16 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.ContextCompat
+import androidx.core.view.forEach
+import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import apiLib.ApiCall
 import com.example.aperturedigital.R
+import kotlinx.android.synthetic.main.fragment_lens.*
 import lib.Constants
 import lib.Encryption
+import lib.ImplementSettings
 import lib.Listeners
 import org.json.JSONArray
 import org.json.JSONObject
@@ -50,6 +58,16 @@ class LensFragment: Fragment(){
         return rootView
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        //change based on settings
+        //always be one as the constraint
+
+        val settings = ImplementSettings(context as Context)
+        settings.changeToPreference(constraintLayoutContent, "Lens")
+        settings.changeTextColor(constraintLayoutContent)
+    }
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         currentContext = context
@@ -60,7 +78,7 @@ class LensFragment: Fragment(){
         if (resultCode == RESULT_OK){
             if (data != null){
                 currentBarcode = data!!.getStringExtra("gtin")
-                activity!!.runOnUiThread{
+                requireActivity().runOnUiThread{
                     //change to the actual api calls
                     apiCalls(currentBarcode)
                 }

@@ -12,9 +12,11 @@ import android.widget.Button
 import android.widget.RadioButton
 import androidx.fragment.app.Fragment
 import com.example.aperturedigital.R
+import kotlinx.android.synthetic.main.fragment_settings.*
 
 
 class SettingsFragment: Fragment() {
+    lateinit var radioColor: RadioButton
     lateinit var radioDark: RadioButton
     lateinit var radioLight: RadioButton
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -28,25 +30,23 @@ class SettingsFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val saveBtn = view.findViewById<Button>(R.id.saveBtn)
+        radioColor = view.findViewById(R.id.radioColor)
         radioDark = view.findViewById(R.id.radioDark)
         radioLight = view.findViewById(R.id.radioLight)
         saveBtn.setOnClickListener {
             //1=dark, 2=light
             var theme = 1
-            if (radioDark.isChecked){
+            if (radioColor.isChecked){
                 theme = 1
-            }else if(radioLight.isChecked){
+            }else if(radioDark.isChecked){
                 theme = 2
+            }else if(radioLight.isChecked){
+                theme = 3
             }
             val editor: Editor =
                 (context as Context).getSharedPreferences("userSettings", MODE_PRIVATE).edit()
             editor.putInt("theme", theme)
-            editor.apply()
-        //to retrive preferences
-//            val prefs: SharedPreferences =
-//                (context as Context).getSharedPreferences("userSettings", MODE_PRIVATE)
-//            val xp = prefs.getInt("theme", 0) // will return 0 if no  value is saved
-
+            editor.commit()
         }
     }
 
