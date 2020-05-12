@@ -2,7 +2,6 @@ package fragments
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
-import android.content.SharedPreferences
 import android.content.SharedPreferences.Editor
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,8 +11,9 @@ import android.widget.Button
 import android.widget.RadioButton
 import androidx.fragment.app.Fragment
 import com.example.aperturedigital.R
+import kotlinx.android.synthetic.main.fragment_lens.*
 import kotlinx.android.synthetic.main.fragment_settings.*
-
+import lib.ImplementSettings
 
 class SettingsFragment: Fragment() {
     lateinit var radioColor: RadioButton
@@ -30,6 +30,11 @@ class SettingsFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val saveBtn = view.findViewById<Button>(R.id.saveBtn)
+
+        val settings = ImplementSettings(context as Context)
+        settings.changeToPreference(constraintLayoutSettingsContent, "Settings")
+        settings.changeTextColor(constraintLayoutSettingsContent)
+
         radioColor = view.findViewById(R.id.radioColor)
         radioDark = view.findViewById(R.id.radioDark)
         radioLight = view.findViewById(R.id.radioLight)
@@ -47,6 +52,9 @@ class SettingsFragment: Fragment() {
                 (context as Context).getSharedPreferences("userSettings", MODE_PRIVATE).edit()
             editor.putInt("theme", theme)
             editor.commit()
+
+            settings.changeToPreference(constraintLayoutSettingsContent, "Settings")
+            settings.changeTextColor(constraintLayoutSettingsContent)
         }
     }
 

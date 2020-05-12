@@ -13,7 +13,11 @@ class ApiCall(baseUrl: String, paramsPassed: HashMap<String, String>, context: C
     private val prams: HashMap<String, String> = paramsPassed
 
     init {
-        apiRequest()
+        if (baseUrl == "runningmonsters.co.uk"){
+            databaseRequest()
+        }else{
+            apiRequest()
+        }
     }
 
     private fun apiRequest(){
@@ -22,5 +26,13 @@ class ApiCall(baseUrl: String, paramsPassed: HashMap<String, String>, context: C
         request.params = prams
         val url = request.buildUrl()
         request.request(url, activityContext)
+    }
+
+    private fun databaseRequest(){
+        request.baseUrl = url
+        request.subKey = key
+        request.params = prams
+        val url = request.buildUrl()
+        request.requestDatabase(url, activityContext)
     }
 }

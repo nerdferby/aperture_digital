@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.example.aperturedigital.R
 import kotlinx.android.synthetic.main.fragment_history.*
-import kotlinx.android.synthetic.main.fragment_lens.*
 import lib.ImplementSettings
 
 class HistoryFragment: Fragment() {

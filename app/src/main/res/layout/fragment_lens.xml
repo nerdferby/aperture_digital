@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     android:background="@android:color/holo_blue_light">
     <!--Barcode scanner goes in here-->
-
     <Button
         android:id="@+id/startBarcodeScannerBtn"
         android:layout_width="wrap_content"
@@ -17,6 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:text="Start Barcode \n Scanner"
+        android:textSize="20sp"
         android:background="?android:selectableItemBackground"/>
 
 
