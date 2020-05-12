@@ -4,13 +4,11 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.android.volley.Response
-import com.android.volley.VolleyLog
 import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import lib.Listeners
 import org.json.JSONObject
-import java.io.UnsupportedEncodingException
-import java.nio.charset.Charset
 
 
 class CustomRequest(listeners: Listeners) {
@@ -57,43 +55,21 @@ class CustomRequest(listeners: Listeners) {
         jsonBodyObj.put("apiKey", subKey)
         requestBody = jsonBodyObj.toString()
         val queue = Volley.newRequestQueue(context)
-//        val data = HashMap<String, String>()
-//        data.put("apiKey", subKey)
-        //JSONObject(data as Map<*, *>)
-        val jsonRequest = object : JsonObjectRequest(Method.POST, url, jsonBodyObj,
+        val jsonRequest = object : StringRequest(Method.POST, url,
             Response.Listener { response ->
-                localListener.fireApiChangeListener(response)
+                val convertedObject: JSONObject = JSONObject(response)
+
+                localListener.fireDatabaseChangeListener(convertedObject)
             },
             Response.ErrorListener { error ->
                 Log.d("A", "/post request fail! Error: ${error.printStackTrace()}")
             }) {
 
-
-//            override fun getParams(): MutableMap<String, String> {
-//                val params = HashMap<String, String>()
-//                params.put("apiKey", subKey)
-//                return params
-//            }
-
-//            override fun getBody(): ByteArray? {
-//                try {
-//                    return requestBody.toByteArray(Charset.forName("utf-8"))
-//                } catch (error: UnsupportedEncodingException) {
-//                    VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s",
-//                    requestBody, "utf-8");
-//                    return null;
-//                 }
-//            }
-
-            override fun getBodyContentType(): String {
-                return MULTIPART_FORMDATA
+            override fun getParams(): MutableMap<String, String> {
+                val params = HashMap<String, String>()
+                params.put("apiKey", subKey)
+                return params
             }
-
-//            override fun getHeaders(): MutableMap<String, String> {
-//                val params: MutableMap<String, String> = HashMap()
-//                params["Content-Type"] = "application/x-www-form-urlencoded"
-//                return params
-//            }
         }
         queue.add(jsonRequest)
     }

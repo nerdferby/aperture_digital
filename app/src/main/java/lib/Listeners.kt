@@ -5,6 +5,8 @@ import org.json.JSONObject
 class Listeners {
     private val onApiChangeListeners = mutableListOf<ApiChangeListener>()
     private val onBarcodeChangeListener = mutableListOf<BarcodeChangeListener>()
+    private val onDatabaseListeners = mutableListOf<DatabaseChangeListener>()
+
 
     fun addApiChangeListener(listener: ApiChangeListener){
         onApiChangeListeners.add(listener)
@@ -13,6 +15,16 @@ class Listeners {
     fun fireApiChangeListener(response: JSONObject){
         onApiChangeListeners.forEach{
             it.onApiChange(response)
+        }
+    }
+
+    fun addDatabaseChangeListener(listener: DatabaseChangeListener){
+        onDatabaseListeners.add(listener)
+    }
+
+    fun fireDatabaseChangeListener(response: JSONObject){
+        onDatabaseListeners.forEach{
+            it.onDatabaseChange(response)
         }
     }
 
@@ -30,6 +42,9 @@ class Listeners {
 
 interface ApiChangeListener {
     fun onApiChange(response: JSONObject)
+}
+interface DatabaseChangeListener {
+    fun onDatabaseChange(response: JSONObject)
 }
 
 interface BarcodeChangeListener {

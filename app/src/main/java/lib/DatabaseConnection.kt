@@ -4,7 +4,7 @@ import android.content.Context
 import apiLib.ApiCall
 
 
-class DatabaseConnection(context: Context, listener: ApiChangeListener, listeners: Listeners, apiKey: String) {
+class DatabaseConnection(context: Context, listener: DatabaseChangeListener, listeners: Listeners, apiKey: String) {
     var mainContext: Context = context
     val dbListener = listener
     val localListeners = listeners
@@ -17,7 +17,7 @@ class DatabaseConnection(context: Context, listener: ApiChangeListener, listener
         params.put("gtin", gtin)
 
         val apiCall = ApiCall("runningmonsters.co.uk", params, mainContext, key, localListeners)
-        localListeners.addApiChangeListener(dbListener)
+        localListeners.addDatabaseChangeListener(dbListener)
 //        apiCall.setApiChangeListener(dbListener)
     }
 

@@ -91,16 +91,27 @@ class LensFragment: Fragment(){
 //        scannerBtn.visibility = View.VISIBLE
     }
 
-    private var databaseListener = object: ApiChangeListener {
-        override fun onApiChange(response: JSONObject) {
+    private var databaseListener = object: DatabaseChangeListener {
+
+        override fun onDatabaseChange(response: JSONObject) {
             Log.d("test", response.toString())
-            if (response["error"] == true){
-//                Send no product found
+
+            if(response["error"] == true){
+                //no product found
             }else{
                 //get product from the response
-                //getProduct(response)
+                getProductFromDb(response)
             }
+
         }
+    }
+
+    private fun getProductFromDb(response: JSONObject): MutableList<String>{
+        val product = ((response["products"] as JSONArray)[0] as JSONObject)
+        val gtin = product["Gtin"].toString()
+        val ingredients = product["Ingredients"].toString()
+        val lifestyle = product["Lifestyle"].toString()
+        return mutableListOf(gtin, ingredients, lifestyle)
     }
 
     private fun checkApis(barcode: String){
