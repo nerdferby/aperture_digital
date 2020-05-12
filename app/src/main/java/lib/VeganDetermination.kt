@@ -1,5 +1,8 @@
 package lib
 
+import java.util.*
+import kotlin.collections.ArrayList
+
 class VeganDetermination {
     companion object {
         const val IS_VEGAN = 0
@@ -88,34 +91,48 @@ class VeganDetermination {
         Test if a product is vegan
         -
         Expecting ingredients as a string array
+        --
+        Description: This function tests to see if any ingredients are definitely not vegan, if so it will return VeganDetermination.NOT_VEGAN
+            If no non-vegan ingredients are found then it tests to see if there are any potentially vegan ingredients such as D3 or Omega 3
+            if the ingredients list contains the vegan friendly version then VeganDetermination.IS_VEGAN will be returned
+            otherwise VeganDetermination.UNKNOWN will be returned
          */
         fun isProductVegan(ingredients: Array<String>): Int{
-            val definitelyNotVegan = isDefinitelyNotVegan(ingredients)
+            val formattedIngredients = formatIngredients(ingredients)
+            val definitelyNotVegan = isDefinitelyNotVegan(formattedIngredients)
+            val maybeNotVegan = isMaybeNotVegan(formattedIngredients)
 
-            if(definitelyNotVegan) return this.NOT_VEGAN
-
-            val maybeNotVegan = isMaybeNotVegan(ingredients)
-
-            if(maybeNotVegan) return this.UNKNOWN
+            if(definitelyNotVegan == this.NOT_VEGAN) return this.NOT_VEGAN
+            if(maybeNotVegan == this.UNKNOWN) return this.UNKNOWN
 
             return this.IS_VEGAN
 
         }
 
-        private fun isDefinitelyNotVegan(ingredients: Array<String>): Boolean{
+        private fun formatIngredients(ingredients: Array<String>): Array<String> {
+            val formattedIngredients = ArrayList<String>()
+
+            for(ingredient in ingredients) {
+                formattedIngredients.add(ingredient.toLowerCase(Locale.ROOT))
+            }
+
+            return formattedIngredients.toTypedArray()
+        }
+
+        private fun isDefinitelyNotVegan(ingredients: Array<String>): Int {
             for(ingredient in ingredients){
                 if(ingredient in nonVeganIngredients){
-                    return true
+                    return this.NOT_VEGAN
                 }
             }
 
-            return false
+            return this.IS_VEGAN
         }
 
         /*
             Finds potentially vegan ingredients and checks them against the types that are vegan for that ingredient
          */
-        private fun isMaybeNotVegan(ingredients: Array<String>): Boolean {
+        private fun isMaybeNotVegan(ingredients: Array<String>): Int {
             val maybeIngredients = ArrayList<String>()
             for(ingredient in ingredients){
                 if(ingredient in potentiallyVeganIngredients){
@@ -125,11 +142,24 @@ class VeganDetermination {
 
             for(ingredient in maybeIngredients){
                 if(ingredient in potentiallyVeganTypes){
-                    TODO("Complete logic, test the ingredient exists in the potentiallyVeganTypes")
+                    if(isVeganType(ingredient, ingredients) == this.UNKNOWN) return this.UNKNOWN
                 }
             }
 
-            return false
+            return this.IS_VEGAN
+        }
+
+        private fun isVeganType(validType: String, ingredients: Array<String>): Int {
+            if(validType in potentiallyVeganTypes){
+                val validTypes = potentiallyVeganTypes[validType]
+
+                if (validTypes != null) {
+                    for(type in validTypes){
+                        if(type !in ingredients) return this.UNKNOWN
+                    }
+                }
+            }
+            return this.IS_VEGAN
         }
     }
 }
