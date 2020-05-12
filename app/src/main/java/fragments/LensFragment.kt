@@ -38,14 +38,15 @@ class LensFragment: Fragment(){
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.fragment_lens, container, false)
-        currentBarcode = "05050179607031"
+        currentBarcode = "5057373701954"
         //5057373701954
+        //05050179607031
         scannerBtn= (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
         scannerBtn.setOnClickListener {
 //            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
 //            scannerBtn.visibility = View.INVISIBLE
-            checkDb(currentBarcode)
-//            checkApis(currentBarcode)
+//            checkDb(currentBarcode)
+            checkApis(currentBarcode)
         }
         return rootView
     }
@@ -76,12 +77,6 @@ class LensFragment: Fragment(){
         }
     }
 
-    private fun checkDb(gtin: String){
-        val db = DatabaseConnection(context as Context, databaseListener, listenerClass, (context as Context).getString(R.string.databaseApiKey))
-        db.getCertainProduct(gtin)
-//        if (db.returnProduct())
-    }
-
     private fun apiCalls(barcode: String) {
         if (this.childFragmentManager.fragments.size > 0){
             this.childFragmentManager.beginTransaction().remove(
@@ -91,34 +86,18 @@ class LensFragment: Fragment(){
 //        scannerBtn.visibility = View.VISIBLE
     }
 
-    private var databaseListener = object: DatabaseChangeListener {
-
-        override fun onDatabaseChange(response: JSONObject) {
-            Log.d("test", response.toString())
-
-            if(response["error"] == true){
-                //no product found
-            }else{
-                //get product from the response
-                getProductFromDb(response)
-            }
-
-        }
-    }
-
-    private fun getProductFromDb(response: JSONObject): MutableList<String>{
-        val product = ((response["products"] as JSONArray)[0] as JSONObject)
-        val gtin = product["Gtin"].toString()
-        val ingredients = product["Ingredients"].toString()
-        val lifestyle = product["Lifestyle"].toString()
-        return mutableListOf(gtin, ingredients, lifestyle)
+    private fun checkDb(gtin: String){
+        val db = DatabaseConnection(context as Context, databaseListener, listenerClass, (context as Context).getString(R.string.databaseApiKey))
+        db.getCertainProduct(gtin)
     }
 
     private fun checkApis(barcode: String){
-        //this checks through both apis
+        //this checks through both apis and the database
         if(productCheckIndex == 0){
-            openFoodApi(barcode)
+            checkDb(barcode)
         }else if(productCheckIndex == 1){
+            openFoodApi(barcode)
+        }else if(productCheckIndex == 2) {
             tescoApiCall(barcode)
         }else{
             updateText("No product was found")
@@ -142,6 +121,33 @@ class LensFragment: Fragment(){
         listenerClass.addApiChangeListener(listenerInp)
     }
 
+    private var databaseListener = object: DatabaseChangeListener {
+        override fun onDatabaseChange(response: JSONObject) {
+            Log.d("test", response.toString())
+            var finalData = mutableListOf<String>()
+            var localPassed = false
+            if(response["error"] == true){
+                //no product found
+                productCheckIndex++
+                checkApis(currentBarcode)
+            }else{
+                //get product from the response
+                finalData = getProductFromDb(response)
+                localPassed = true
+            }
+
+            if(localPassed){
+                var finalString: String = ""
+                for (i in 0 until finalData.count()){
+                    finalString += finalData[i] + "\n" + "\n"
+                    Log.d(constantClass.DEBUGTAG, finalData[i])
+                }
+                updateText(finalString)
+            }
+
+        }
+    }
+
     private var listenerInp = object: lib.ApiChangeListener {
         override fun onApiChange(response: JSONObject) {
             var responseLocation = ""
@@ -152,6 +158,8 @@ class LensFragment: Fragment(){
                     productCheckIndex++
                     checkApis(currentBarcode)
                 }else{
+                    //CHECK
+                    localPassed = true
                     finalData = getApiData(response)
                     responseLocation = "Tesco"
                 }
@@ -161,8 +169,14 @@ class LensFragment: Fragment(){
                     productCheckIndex++
                     checkApis(currentBarcode)
                 }else{
-                    localPassed = true
                     finalData = getWorldFoodApiData(response)
+                    if (finalData[0] == ""){
+                        productCheckIndex++
+                        localPassed = false
+                        checkApis(currentBarcode)
+                    }else{
+                        localPassed = true
+                    }
                     responseLocation = "World"
 
                 }
@@ -221,12 +235,25 @@ class LensFragment: Fragment(){
         rootView.invalidate()
     }
 
+    private fun getProductFromDb(response: JSONObject): MutableList<String>{
+        val product = ((response["products"] as JSONArray)[0] as JSONObject)
+        val gtin = product["Gtin"].toString()
+        val ingredients = product["Ingredients"].toString()
+        val lifestyle = product["Lifestyle"].toString()
+        return mutableListOf(gtin, ingredients, lifestyle)
+    }
+
     fun getWorldFoodApiData(response: JSONObject): MutableList<String>{
         val responseMinimal: JSONObject = response.get("product") as JSONObject
-        val name = responseMinimal["product_name"].toString()
-        val ingredients = responseMinimal["ingredients_text_en"].toString()
-        val keyWords = responseMinimal["_keywords"].toString()
-        return mutableListOf(name, ingredients, keyWords)
+        if (responseMinimal.has("ingredients_text_en")){
+            val name = responseMinimal["product_name"].toString()
+            val ingredients = responseMinimal["ingredients_text_en"].toString()
+            val keyWords = responseMinimal["_keywords"].toString()
+            return mutableListOf(name, ingredients, keyWords)
+        }else{
+            return mutableListOf("")
+        }
+
     }
 
     fun getApiData(response: JSONObject): MutableList<String>{
