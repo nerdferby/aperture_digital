@@ -18,6 +18,12 @@ import localdatabase.LocalDBOpenHelper
 import localdatabase.Product
 
 class HistoryFragment: Fragment() {
+    /**
+     * At the moment this creating a SQLite (local) database and reading from it to get the scanned
+     * history of the user.
+     * Currently the database is not set up fully.
+     */
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 //        return super.onCreateView(inflater, container, savedInstanceState)
@@ -26,23 +32,23 @@ class HistoryFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewDb()
 
         val settings = ImplementSettings(context as Context)
         settings.changeToPreference(constraintLayoutHistoryContent, "History")
         settings.changeTextColor(constraintLayoutHistoryContent)
 
-        viewDb()
     }
 
-    fun addToDb(){
-        val dbHandler = LocalDBOpenHelper(context as Context, null)
-        val product = Product("1","gtin","Description","Ingre","Lifestyle")
-        dbHandler.addProduct(product)
-    }
+    //Move this to the lensFragment with the response from the api
+//    fun addToDb(){
+//        val dbHandler = LocalDBOpenHelper(context as Context, null)
+//        val product = Product("1","gtin","Description","Ingredients","Lifestyle")
+//        dbHandler.addProduct(product)
+//    }
 
-    fun viewDb(){
+    private fun viewDb(){
         var finalString: String = ""
-
         val dbHandler = LocalDBOpenHelper(context as Context, null)
         val cursor = dbHandler.getAllProducts()
         cursor!!.moveToFirst()
@@ -58,12 +64,11 @@ class HistoryFragment: Fragment() {
             }
         }
 
-
         cursor.close()
         updateText(finalString)
     }
 
-    fun updateText(text: String){
+    private fun updateText(text: String){
         val historyText = TextView(context as Context)
         historyText.textSize = 20f
         historyText.text = text
@@ -103,7 +108,6 @@ class HistoryFragment: Fragment() {
             ConstraintSet.PARENT_ID,
             ConstraintSet.BOTTOM
         )
-
         set.applyTo((view as ViewGroup).findViewById(R.id.constraintLayoutHistoryContent))
     }
 }

@@ -13,7 +13,7 @@ class ApiCall(baseUrl: String, paramsPassed: HashMap<String, String>, context: C
     private val prams: HashMap<String, String> = paramsPassed
 
     init {
-        if (baseUrl == "runningmonsters.co.uk"){
+        if (baseUrl == "gpm.digiavit.co.uk"){
             databaseRequest()
         }else{
             apiRequest()
@@ -23,7 +23,7 @@ class ApiCall(baseUrl: String, paramsPassed: HashMap<String, String>, context: C
     private fun apiRequest(){
         request.baseUrl = url
         request.subKey = key
-        request.params = prams
+        request.paramsFromCall = prams
         val url = request.buildUrl()
         request.request(url, activityContext)
     }
@@ -31,7 +31,7 @@ class ApiCall(baseUrl: String, paramsPassed: HashMap<String, String>, context: C
     private fun databaseRequest(){
         request.baseUrl = url
         request.subKey = key
-        request.params = prams
+        request.paramsFromCall = prams
         val url = request.buildUrl()
         request.requestDatabase(url, activityContext)
     }

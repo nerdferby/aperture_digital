@@ -13,14 +13,11 @@ import org.json.JSONObject
 
 class CustomRequest(listeners: Listeners) {
     var baseUrl: String = ""
-    var params: HashMap<String, String> = hashMapOf()
+    var paramsFromCall: HashMap<String, String> = hashMapOf()
     lateinit var subKey: String
     val localListener = listeners
 
     lateinit var requestBody: String
-
-    val BOUNDARY = "AS24adije32MDJHEM9oMaGnKUXtfHq"
-    val MULTIPART_FORMDATA = "multipart/form-data;boundary=" + BOUNDARY
 
     fun buildUrl(): String {
         val builder = Uri.Builder()
@@ -36,13 +33,13 @@ class CustomRequest(listeners: Listeners) {
                 .appendEncodedPath("api")
                 .appendEncodedPath("v0")
                 .appendEncodedPath("product/")
-                .appendEncodedPath(params["gtin"])
+                .appendEncodedPath(paramsFromCall["gtin"])
         }else{
             builder.scheme("https")
                 .authority(baseUrl)
         }
 
-        for ((k, v) in params) {
+        for ((k, v) in paramsFromCall) {
             if (gtinNeeded){
                 builder.appendQueryParameter(k, v)
             }
@@ -51,6 +48,10 @@ class CustomRequest(listeners: Listeners) {
     }
 
     fun requestDatabase(url: String, context: Context){
+        /**
+         * To do a post request it needs to be a string request because JsonObject does not work
+         * for some reason.
+         */
         val jsonBodyObj = JSONObject()
         jsonBodyObj.put("apiKey", subKey)
         requestBody = jsonBodyObj.toString()
@@ -58,7 +59,6 @@ class CustomRequest(listeners: Listeners) {
         val jsonRequest = object : StringRequest(Method.POST, url,
             Response.Listener { response ->
                 val convertedObject: JSONObject = JSONObject(response)
-
                 localListener.fireDatabaseChangeListener(convertedObject)
             },
             Response.ErrorListener { error ->
@@ -66,9 +66,16 @@ class CustomRequest(listeners: Listeners) {
             }) {
 
             override fun getParams(): MutableMap<String, String> {
-                val params = HashMap<String, String>()
-                params.put("apiKey", subKey)
-                return params
+                val localParams = HashMap<String, String>()
+                localParams.put("apiKey", subKey)
+                if (paramsFromCall.count() > 2){
+                    localParams.put("barcode", paramsFromCall["barcode"] as String)
+                    localParams.put("name", paramsFromCall["name"] as String)
+                    localParams.put("description", paramsFromCall["description"] as String)
+                    localParams.put("source", paramsFromCall["source"] as String)
+                }
+
+                return localParams
             }
         }
         queue.add(jsonRequest)
