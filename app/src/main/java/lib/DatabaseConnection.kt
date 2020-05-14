@@ -32,19 +32,8 @@ class DatabaseConnection(context: Context, listener: DatabaseChangeListener, lis
         params.put("source", productDetails[3])
         //change this to the actual database
         val apiCall = ApiCall("gpm.digiavit.co.uk", params, mainContext, key, localListeners)
-        localListeners.addDatabaseChangeListener(listenerLocal)
+        localListeners.addDatabaseInsertListener(dbListener)
 //        apiCall.setApiChangeListener(dbListener)
-    }
-
-    private val listenerLocal = object : DatabaseChangeListener{
-        override fun onDatabaseChange(response: JSONObject) {
-            if (response["error"] == "false"){
-                Log.d("databaseTest", "Product has been added into the database")
-            }else{
-                Log.d("databaseTest", "Error adding product")
-            }
-        }
-
     }
 
 }

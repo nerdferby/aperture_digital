@@ -9,6 +9,7 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import lib.Listeners
 import org.json.JSONObject
+import java.lang.Exception
 
 
 class CustomRequest(listeners: Listeners) {
@@ -58,8 +59,14 @@ class CustomRequest(listeners: Listeners) {
         val queue = Volley.newRequestQueue(context)
         val jsonRequest = object : StringRequest(Method.POST, url,
             Response.Listener { response ->
-                val convertedObject: JSONObject = JSONObject(response)
-                localListener.fireDatabaseChangeListener(convertedObject)
+                try {
+                    val convertedObject: JSONObject = JSONObject(response)
+                    localListener.fireDatabaseChangeListener(convertedObject)
+                }catch (e: Exception){
+                    val response = JSONObject()
+                    response.put("error", true)
+                    localListener.fireDatabaseInsertListener(response)
+                }
             },
             Response.ErrorListener { error ->
                 Log.d("A", "/post request fail! Error: ${error.printStackTrace()}")

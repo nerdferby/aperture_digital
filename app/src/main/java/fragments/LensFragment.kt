@@ -41,6 +41,7 @@ class LensFragment: Fragment(){
         currentBarcode = "05050179607031"
         //5057373701954
         //05050179607031
+        //5057545618332
         scannerBtn= (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
         scannerBtn.setOnClickListener {
 //            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
@@ -124,15 +125,30 @@ class LensFragment: Fragment(){
     }
 
     private fun addFoundProductDb(productDetails: MutableList<String>){
-        val db = DatabaseConnection(context as Context, databaseListener, listenerClass, (context as Context).getString(R.string.databaseApiKey))
+        val db = DatabaseConnection(context as Context, databaseListenerInsert, listenerClass, (context as Context).getString(R.string.databaseApiKey))
         db.addProduct(productDetails)
     }
+
+    private var databaseListenerInsert = object: DatabaseChangeListener{
+        override fun onDatabaseChange(response: JSONObject) {
+            //TODO(Fix that once its added the app carries on trying to find the product)
+            if (response["error"] == "false"){
+                Log.d("databaseTest", "Product has been added into the database")
+            }else{
+                Log.d("databaseTest", "Error adding product")
+            }
+        }
+    }
+
+
+
 
     private var databaseListener = object: DatabaseChangeListener {
         override fun onDatabaseChange(response: JSONObject) {
             Log.d("test", response.toString())
             var finalData = mutableListOf<String>()
             var localPassed = false
+
             if(response["error"] == true){
                 //no product found
                 productCheckIndex++
@@ -149,6 +165,7 @@ class LensFragment: Fragment(){
                     finalString += finalData[i] + "\n" + "\n"
                     Log.d(constantClass.DEBUGTAG, finalData[i])
                 }
+                finalString += "\nDatabase"
                 updateText(finalString)
             }
 
@@ -169,20 +186,27 @@ class LensFragment: Fragment(){
                     finalData = getApiData(response)
                 }
             }else{
-                if (!(response["product"] as JSONObject).has("product_name")){
-                    //product was not found
-                    productCheckIndex++
-                    checkApis(currentBarcode)
-                }else{
-                    finalData = getWorldFoodApiData(response)
-                    if (finalData[0] == ""){
+                if (response.has("product")){
+                    if (!(response["product"] as JSONObject).has("product_name")){
+                        //product was not found
                         productCheckIndex++
-                        localPassed = false
                         checkApis(currentBarcode)
                     }else{
-                        localPassed = true
+                        finalData = getWorldFoodApiData(response)
+                        if (finalData[0] == ""){
+                            productCheckIndex++
+                            localPassed = false
+                            checkApis(currentBarcode)
+                        }else{
+                            localPassed = true
+                        }
                     }
+                }else{
+                    productCheckIndex++
+                    localPassed = false
+                    checkApis(currentBarcode)
                 }
+
             }
             if(localPassed){
                 /**
@@ -193,7 +217,10 @@ class LensFragment: Fragment(){
                     finalString += finalData[i] + "\n" + "\n"
                     Log.d(constantClass.DEBUGTAG, finalData[i])
                 }
+                finalString += "\nAPI"
                 updateText(finalString)
+                addFoundProductDb(mutableListOf(currentBarcode, finalData[0], finalData[1], "Tesco"))
+
             }
         }
     }
@@ -256,10 +283,9 @@ class LensFragment: Fragment(){
         if (responseMinimal.has("ingredients_text_en")){
             val name = responseMinimal["product_name"].toString()
             val ingredients = responseMinimal["ingredients_text_en"].toString()
-            val keyWords = responseMinimal["_keywords"].toString()
             //TODO(change Tesco to actual brand later)
-            addFoundProductDb(mutableListOf(currentBarcode, name, ingredients, "Tesco"))
-            return mutableListOf(name, ingredients, keyWords)
+//            addFoundProductDb(mutableListOf(name, ingredients, "Tesco"))
+            return mutableListOf(name, ingredients)
         }else{
             return mutableListOf("")
         }
@@ -279,32 +305,13 @@ class LensFragment: Fragment(){
          * productAttributes -> 1 to get to lifestyle
          */
         var finalData: MutableList<String> = mutableListOf()
-        finalData.add(pairs["gtin"].toString())
         finalData.add(pairs["description"].toString())
-        finalData.add(pairs["brand"].toString())
         finalData.add(pairs["ingredients"].toString())
+        finalData.add("Tesco")
+
         //TODO(change Tesco to actual brand later)
-        addFoundProductDb(mutableListOf(currentBarcode, pairs["description"].toString(),
-            pairs["ingredients"].toString(), "Tesco"))
-        val lifeStyle = pairs["productAttributes"] as JSONArray
-        var lifeStyleValue: Any
-        if (lifeStyle.length() > 1){
-            //Tesco api to find the lifestyle value is embedded about 8 times,
-            //causing this monstrosity
-
-            lifeStyleValue = lifeStyle[1] as JSONObject
-            lifeStyleValue = lifeStyleValue["category"] as JSONArray
-            lifeStyleValue = lifeStyleValue[0] as JSONObject
-            lifeStyleValue = lifeStyleValue as JSONObject
-            if(lifeStyleValue.has("lifestyle")){
-                lifeStyleValue = lifeStyleValue["lifestyle"] as JSONArray
-                lifeStyleValue = lifeStyleValue[0] as JSONObject
-                lifeStyleValue = lifeStyleValue["lifestyle"] as JSONObject
-                lifeStyleValue = lifeStyleValue["value"]
-            }
-
-            finalData.add(lifeStyleValue.toString())
-        }
+//        addFoundProductDb(mutableListOf(currentBarcode, pairs["description"].toString(),
+//            pairs["ingredients"].toString(), "Tesco"))
         return finalData
     }
 }
