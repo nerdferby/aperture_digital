@@ -38,16 +38,16 @@ class LensFragment: Fragment(){
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.fragment_lens, container, false)
-        currentBarcode = "05050179607031"
+        currentBarcode = "5057373701954"
         //5057373701954
         //05050179607031
         //5057545618332
         scannerBtn= (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
         scannerBtn.setOnClickListener {
-//            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
-//            scannerBtn.visibility = View.INVISIBLE
+            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
+            scannerBtn.visibility = View.INVISIBLE
 //            checkDb(currentBarcode)
-            checkApis(currentBarcode)
+//            checkApis(currentBarcode)
         }
         return rootView
     }
@@ -83,7 +83,7 @@ class LensFragment: Fragment(){
             this.childFragmentManager.beginTransaction().remove(
                 this.childFragmentManager.fragments[0]).commit()
         }
-        updateText(barcode)
+        checkApis(barcode)
 //        scannerBtn.visibility = View.VISIBLE
     }
 
@@ -131,7 +131,6 @@ class LensFragment: Fragment(){
 
     private var databaseListenerInsert = object: DatabaseChangeListener{
         override fun onDatabaseChange(response: JSONObject) {
-            //TODO(Fix that once its added the app carries on trying to find the product)
             if (response["error"] == "false"){
                 Log.d("databaseTest", "Product has been added into the database")
             }else{
@@ -181,9 +180,14 @@ class LensFragment: Fragment(){
                     productCheckIndex++
                     checkApis(currentBarcode)
                 }else{
-                    //CHECK
-                    localPassed = true
                     finalData = getApiData(response)
+                    if (finalData[0] == ""){
+                        productCheckIndex++
+                        localPassed = false
+                        checkApis(currentBarcode)
+                    }else{
+                        localPassed = true
+                    }
                 }
             }else{
                 if (response.has("product")){
@@ -304,10 +308,16 @@ class LensFragment: Fragment(){
          * ingredients
          * productAttributes -> 1 to get to lifestyle
          */
+
+        //add if no ingredients then no product found
         var finalData: MutableList<String> = mutableListOf()
-        finalData.add(pairs["description"].toString())
-        finalData.add(pairs["ingredients"].toString())
-        finalData.add("Tesco")
+        if (pairs.has("ingredients")){
+            finalData.add(pairs["description"].toString())
+            finalData.add(pairs["ingredients"].toString())
+            finalData.add("Tesco")
+        }else{
+            finalData.add("")
+        }
 
         //TODO(change Tesco to actual brand later)
 //        addFoundProductDb(mutableListOf(currentBarcode, pairs["description"].toString(),
