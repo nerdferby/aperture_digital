@@ -75,6 +75,9 @@ class CustomRequest(listeners: Listeners) {
             override fun getParams(): MutableMap<String, String> {
                 val localParams = HashMap<String, String>()
                 localParams.put("apiKey", subKey)
+                if (paramsFromCall.contains("name")){
+                    localParams.put("name", paramsFromCall["name"] as String)
+                }
                 if (paramsFromCall.count() > 2){
                     localParams.put("barcode", paramsFromCall["barcode"] as String)
                     localParams.put("name", paramsFromCall["name"] as String)

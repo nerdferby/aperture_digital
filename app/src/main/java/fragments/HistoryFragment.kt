@@ -16,15 +16,8 @@ import kotlinx.android.synthetic.main.fragment_history.*
 import lib.ImplementSettings
 
 class HistoryFragment: Fragment() {
-    /**
-     * At the moment this creating a SQLite (local) database and reading from it to get the scanned
-     * history of the user.
-     * Currently the database is not set up fully.
-     */
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-//        return super.onCreateView(inflater, container, savedInstanceState)
         return inflater.inflate(R.layout.fragment_history, container, false)
     }
 
@@ -36,7 +29,6 @@ class HistoryFragment: Fragment() {
         settings.changeTextColor(constraintLayoutHistoryContent)
 
     }
-
 
     private fun updateText(text: String){
         val historyText = TextView(context as Context)

@@ -38,7 +38,7 @@ class LensFragment: Fragment(){
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.fragment_lens, container, false)
-        currentBarcode = "5057545618332"
+        currentBarcode = "5000119118615"
         //gtin's for testing
         //5057373701954
         //05050179607031

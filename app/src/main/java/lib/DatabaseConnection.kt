@@ -22,6 +22,28 @@ class DatabaseConnection(context: Context, listener: DatabaseChangeListener, lis
 //        apiCall.setApiChangeListener(dbListener)
     }
 
+    fun getAllProducts(){
+        val params = HashMap<String, String>()
+
+        params.put("op", "getAllProducts")
+        //change this to the actual database
+        val apiCall = ApiCall("gpm.digiavit.co.uk", params, mainContext, key, localListeners)
+        localListeners.addDatabaseChangeListener(dbListener)
+//        apiCall.setApiChangeListener(dbListener)
+    }
+
+    fun searchProducts(product_name: String){
+        val params = HashMap<String, String>()
+
+        params.put("op", "searchProducts")
+        params.put("name", product_name)
+
+        //change this to the actual database
+        val apiCall = ApiCall("gpm.digiavit.co.uk", params, mainContext, key, localListeners)
+        localListeners.addDatabaseChangeListener(dbListener)
+//        apiCall.setApiChangeListener(dbListener)
+    }
+
     fun addProduct(productDetails: MutableList<String>){
         val params = HashMap<String, String>()
 
