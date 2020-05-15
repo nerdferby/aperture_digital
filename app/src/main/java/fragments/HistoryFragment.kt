@@ -14,8 +14,6 @@ import androidx.fragment.app.Fragment
 import com.example.aperturedigital.R
 import kotlinx.android.synthetic.main.fragment_history.*
 import lib.ImplementSettings
-import localdatabase.LocalDBOpenHelper
-import localdatabase.Product
 
 class HistoryFragment: Fragment() {
     /**
@@ -32,7 +30,6 @@ class HistoryFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewDb()
 
         val settings = ImplementSettings(context as Context)
         settings.changeToPreference(constraintLayoutHistoryContent, "History")
@@ -40,33 +37,6 @@ class HistoryFragment: Fragment() {
 
     }
 
-    //Move this to the lensFragment with the response from the api
-//    fun addToDb(){
-//        val dbHandler = LocalDBOpenHelper(context as Context, null)
-//        val product = Product("1","gtin","Description","Ingredients","Lifestyle")
-//        dbHandler.addProduct(product)
-//    }
-
-    private fun viewDb(){
-        var finalString: String = ""
-        val dbHandler = LocalDBOpenHelper(context as Context, null)
-        val cursor = dbHandler.getAllProducts()
-        cursor!!.moveToFirst()
-        if (cursor.count > 0){
-            for (col in 0 until cursor.columnCount){
-                finalString += cursor.getString(col) + " "
-            }
-            while (cursor.moveToNext()){
-                for (col in 0 .. cursor.columnCount){
-                    finalString += cursor.getString(col) + " "
-                }
-                finalString += "\n"
-            }
-        }
-
-        cursor.close()
-        updateText(finalString)
-    }
 
     private fun updateText(text: String){
         val historyText = TextView(context as Context)
