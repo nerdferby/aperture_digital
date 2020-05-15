@@ -80,6 +80,8 @@ class CustomRequest(listeners: Listeners) {
                     localParams.put("name", paramsFromCall["name"] as String)
                     localParams.put("description", paramsFromCall["description"] as String)
                     localParams.put("source", paramsFromCall["source"] as String)
+                    localParams.put("ingredients", paramsFromCall["ingredients"] as String)
+
                 }
 
                 return localParams

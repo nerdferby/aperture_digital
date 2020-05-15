@@ -223,7 +223,7 @@ class LensFragment: Fragment(){
                 }
                 finalString += "\nAPI"
                 updateText(finalString)
-                addFoundProductDb(mutableListOf(currentBarcode, finalData[0], finalData[1], "Tesco"))
+                addFoundProductDb(mutableListOf(currentBarcode, finalData[0], "", finalData[1], finalData[2]))
 
             }
         }
@@ -285,11 +285,18 @@ class LensFragment: Fragment(){
     fun getWorldFoodApiData(response: JSONObject): MutableList<String>{
         val responseMinimal: JSONObject = response.get("product") as JSONObject
         if (responseMinimal.has("ingredients_text_en")){
+            //currentBarcode
+            //product_name
+            //no description
+            //brands
+            //ingredients_text_en
             val name = responseMinimal["product_name"].toString()
+            val brand = "World Food Api"
             val ingredients = responseMinimal["ingredients_text_en"].toString()
+
             //TODO(change Tesco to actual brand later)
 //            addFoundProductDb(mutableListOf(name, ingredients, "Tesco"))
-            return mutableListOf(name, ingredients)
+            return mutableListOf(name, brand, ingredients)
         }else{
             return mutableListOf("")
         }
@@ -312,9 +319,9 @@ class LensFragment: Fragment(){
         //add if no ingredients then no product found
         var finalData: MutableList<String> = mutableListOf()
         if (pairs.has("ingredients")){
-            finalData.add(pairs["description"].toString())
+            finalData.add(pairs["description"].toString()) // name
+            finalData.add("Tesco API")
             finalData.add(pairs["ingredients"].toString())
-            finalData.add("Tesco")
         }else{
             finalData.add("")
         }

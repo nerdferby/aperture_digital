@@ -28,8 +28,9 @@ class DatabaseConnection(context: Context, listener: DatabaseChangeListener, lis
         params.put("op", "addNewProduct")
         params.put("barcode", productDetails[0])
         params.put("name", productDetails[1])
-        params.put("description", productDetails[2])
+        params.put("description", "")
         params.put("source", productDetails[3])
+        params.put("ingredients", productDetails[4])
         //change this to the actual database
         val apiCall = ApiCall("gpm.digiavit.co.uk", params, mainContext, key, localListeners)
         localListeners.addDatabaseInsertListener(dbListener)
