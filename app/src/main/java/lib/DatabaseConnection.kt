@@ -25,7 +25,8 @@ class DatabaseConnection(context: Context, listener: DatabaseChangeListener, lis
     fun addProduct(productDetails: MutableList<String>){
         val params = HashMap<String, String>()
 
-        params.put("op", "addNewProduct")
+//        params.put("op", "addNewProduct")
+        params.put("op", "insertNewProduct")
         params.put("barcode", productDetails[0])
         params.put("name", productDetails[1])
         params.put("description", "")
