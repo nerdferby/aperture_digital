@@ -7,6 +7,7 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.os.Bundle
 import android.provider.BaseColumns
+import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
@@ -19,12 +20,15 @@ import org.json.JSONObject
 
 class SearchFragment: Fragment() {
     lateinit var searchBar: SearchView
-    var productNameList: MutableList<String> = mutableListOf()
+//    var productNameList: MutableList<String> = mutableListOf()
     val listenerClass = Listeners()
+    val searchListenerClass = Listeners()
 
     lateinit var from: Array<String>
     lateinit var to: IntArray
     lateinit var cursorAdapter: CursorAdapter
+
+    val suggestionNameList = mutableListOf<String>()
 
     //restart cursor
 
@@ -50,12 +54,8 @@ class SearchFragment: Fragment() {
         from = arrayOf(SearchManager.SUGGEST_COLUMN_TEXT_1)
         to = intArrayOf(R.id.item_label)
         cursorAdapter = SimpleCursorAdapter(context, R.layout.suggestion_layout, null, from, to, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER)
-
         searchBar.suggestionsAdapter = cursorAdapter
-
-
         checkDb()
-
         searchBar.setOnSuggestionListener(object: SearchView.OnSuggestionListener {
             override fun onSuggestionSelect(position: Int): Boolean {
                 return false
@@ -73,22 +73,11 @@ class SearchFragment: Fragment() {
                 return true
             }
         })
-
-        searchBar.setOnCloseListener(onClose)
-    }
-
-    val onClose = object: SearchView.OnCloseListener{
-        override fun onClose(): Boolean {
-            hideSystemUI()
-            return true
-        }
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.search_menu, menu)
-
     }
 
     private fun checkDb(){
@@ -97,7 +86,8 @@ class SearchFragment: Fragment() {
     }
 
     private fun searchProducts(product_name: String){
-        val db = DatabaseConnection(context as Context, databaseSearchListeners, listenerClass, (context as Context).getString(R.string.databaseApiKey))
+        //different listener class to stop calling the other listener
+        val db = DatabaseConnection(context as Context, databaseSearchListeners, searchListenerClass, (context as Context).getString(R.string.databaseApiKey))
         db.searchProducts(product_name)
     }
 
@@ -107,31 +97,36 @@ class SearchFragment: Fragment() {
             hideSystemUI()
             searchProducts(query)
 
-            //get product close to the query
-
+            cursorAdapter.changeCursor(null)
             return true
         }
 
         override fun onQueryTextChange(newText: String?): Boolean {
             val cursor = MatrixCursor(arrayOf(BaseColumns._ID, SearchManager.SUGGEST_COLUMN_TEXT_1))
+            var count = 0
             newText?.let {
-                productNameList.forEachIndexed { index, suggestion ->
+                suggestionNameList.forEachIndexed { index, suggestion ->
                     if (suggestion.contains(newText, true))
                         cursor.addRow(arrayOf(index, suggestion))
+                        Log.d("test", count.toString())
+                    count++
                 }
             }
-
+            Log.d("test", "======================")
+//            Log.d("test", productNameList.toString())
             cursorAdapter.changeCursor(cursor)
+
             return true
         }
     }
 
     private var databaseListener = object: DatabaseChangeListener {
         override fun onDatabaseChange(response: JSONObject) {
+            suggestionNameList.clear()
             val products = response["products"] as JSONObject
             products.keys().forEach {
                 val product = products.get(it) as JSONObject
-                productNameList.add(product["name"].toString())
+                suggestionNameList.add(product["name"].toString())
             }
         }
     }
@@ -147,9 +142,6 @@ class SearchFragment: Fragment() {
             val customAdapter = CustomAdapter(context as Context, productsList)
             val listViewProduct = view!!.findViewById<ListView>(R.id.productList)
             listViewProduct.adapter = customAdapter
-
-            cursorAdapter.cursor.close()
-
         }
     }
 

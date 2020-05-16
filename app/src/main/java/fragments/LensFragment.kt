@@ -45,10 +45,10 @@ class LensFragment: Fragment(){
         //5057545618332
         scannerBtn= (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
         scannerBtn.setOnClickListener {
-//            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
-//            scannerBtn.visibility = View.INVISIBLE
+            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
+            scannerBtn.visibility = View.INVISIBLE
 //            checkDb(currentBarcode)
-            checkApis(currentBarcode)
+//            checkApis(currentBarcode)
         }
         return rootView
     }

@@ -8,8 +8,6 @@ class Listeners {
     private val onDatabaseListeners = mutableListOf<DatabaseChangeListener>()
     private val onDatabaseInsertListeners = mutableListOf<DatabaseChangeListener>()
 
-
-
     fun addApiChangeListener(listener: ApiChangeListener){
         onApiChangeListeners.add(listener)
     }
