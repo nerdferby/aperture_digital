@@ -5,6 +5,7 @@ import android.app.SearchManager
 import android.content.Context
 import android.database.Cursor
 import android.database.MatrixCursor
+import android.graphics.Color
 import android.os.Bundle
 import android.provider.BaseColumns
 import android.util.Log
@@ -18,19 +19,25 @@ import kotlinx.android.synthetic.main.fragment_search.*
 import lib.*
 import org.json.JSONObject
 
+
 class SearchFragment: Fragment() {
     lateinit var searchBar: SearchView
 //    var productNameList: MutableList<String> = mutableListOf()
     val listenerClass = Listeners()
     val searchListenerClass = Listeners()
-
     lateinit var from: Array<String>
     lateinit var to: IntArray
     lateinit var cursorAdapter: CursorAdapter
 
     val suggestionNameList = mutableListOf<String>()
+    lateinit var listViewProduct: ListView
 
-    //restart cursor
+    val productFragment = ProductFragment()
+
+    /**
+     * Trying to change color of the searchView to fit the colorTheme picked.
+     */
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +56,7 @@ class SearchFragment: Fragment() {
         settings.changeToPreference(constraintLayoutSearchContent, "Search")
         settings.changeTextColor(constraintLayoutSearchContent)
         searchBar = view.findViewById(R.id.searchTxtBar)
+        listViewProduct = view.findViewById<ListView>(R.id.productList)
 
         searchBar.setOnQueryTextListener(textChange)
         from = arrayOf(SearchManager.SUGGEST_COLUMN_TEXT_1)
@@ -56,6 +64,8 @@ class SearchFragment: Fragment() {
         cursorAdapter = SimpleCursorAdapter(context, R.layout.suggestion_layout, null, from, to, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER)
         searchBar.suggestionsAdapter = cursorAdapter
         checkDb()
+        listViewProduct.onItemClickListener = itemClickListener
+
         searchBar.setOnSuggestionListener(object: SearchView.OnSuggestionListener {
             override fun onSuggestionSelect(position: Int): Boolean {
                 return false
@@ -67,12 +77,29 @@ class SearchFragment: Fragment() {
                 val cursor = searchBar.suggestionsAdapter.getItem(position) as Cursor
                 val selection = cursor.getString(cursor.getColumnIndex(SearchManager.SUGGEST_COLUMN_TEXT_1))
                 searchBar.setQuery(selection, false)
+                val bundle = Bundle()
+                bundle.putString("productName", selection)
+                productFragment.arguments = bundle
+                this@SearchFragment.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutSearchContent, productFragment).commit()
 
                 //get that certain product
                 // Do something with selection
                 return true
             }
         })
+    }
+
+    private val itemClickListener = object : AdapterView.OnItemClickListener{
+        override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            Log.d("test", "item $position")
+            val productName = listViewProduct.getItemAtPosition(position).toString()
+
+            val bundle = Bundle()
+            bundle.putString("productName", productName)
+            productFragment.arguments = bundle
+            this@SearchFragment.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutSearchContent, productFragment).commit()
+        }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -103,19 +130,13 @@ class SearchFragment: Fragment() {
 
         override fun onQueryTextChange(newText: String?): Boolean {
             val cursor = MatrixCursor(arrayOf(BaseColumns._ID, SearchManager.SUGGEST_COLUMN_TEXT_1))
-            var count = 0
             newText?.let {
                 suggestionNameList.forEachIndexed { index, suggestion ->
                     if (suggestion.contains(newText, true))
                         cursor.addRow(arrayOf(index, suggestion))
-                        Log.d("test", count.toString())
-                    count++
                 }
             }
-            Log.d("test", "======================")
-//            Log.d("test", productNameList.toString())
             cursorAdapter.changeCursor(cursor)
-
             return true
         }
     }
@@ -142,6 +163,7 @@ class SearchFragment: Fragment() {
             val customAdapter = CustomAdapter(context as Context, productsList)
             val listViewProduct = view!!.findViewById<ListView>(R.id.productList)
             listViewProduct.adapter = customAdapter
+
         }
     }
 

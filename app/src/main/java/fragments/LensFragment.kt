@@ -38,17 +38,17 @@ class LensFragment: Fragment(){
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.fragment_lens, container, false)
-        currentBarcode = "5000119118615"
+        currentBarcode = "05050179607031"
         //gtin's for testing
         //5057373701954
         //05050179607031
         //5057545618332
         scannerBtn= (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
         scannerBtn.setOnClickListener {
-            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
-            scannerBtn.visibility = View.INVISIBLE
+//            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
+//            scannerBtn.visibility = View.INVISIBLE
 //            checkDb(currentBarcode)
-//            checkApis(currentBarcode)
+            checkApis(currentBarcode)
         }
         return rootView
     }
