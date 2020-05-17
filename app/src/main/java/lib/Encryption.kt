@@ -15,6 +15,13 @@ class Encryption {
         val keyString = stringToEncrypt.decrypt(key)
         return keyString
     }
+
+    fun encryptString(stringToEncrypt: String, context: Context): String{
+        val key: String = context.getString(R.string.key)
+//        var keyString = stringToEncrypt.encrypt(key)
+        val keyString = stringToEncrypt.encrypt(key)
+        return keyString
+    }
     fun String.encrypt(password: String): String {
         val secretKeySpec = SecretKeySpec(password.toByteArray(), "AES")
         val iv = ByteArray(16)

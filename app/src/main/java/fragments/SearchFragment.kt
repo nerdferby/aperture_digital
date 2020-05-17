@@ -42,7 +42,6 @@ class SearchFragment: Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -163,7 +162,6 @@ class SearchFragment: Fragment() {
             val customAdapter = CustomAdapter(context as Context, productsList)
             val listViewProduct = view!!.findViewById<ListView>(R.id.productList)
             listViewProduct.adapter = customAdapter
-
         }
     }
 

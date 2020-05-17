@@ -2,15 +2,17 @@ package apiLib
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.security.keystore.KeyProperties
-import android.util.Base64
-import android.util.Base64.*
+import android.util.Base64.DEFAULT
+import android.util.Base64.encodeToString
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.example.aperturedigital.R
+import lib.Encryption
 import lib.Listeners
 import org.json.JSONObject
 import java.security.KeyPair
@@ -18,7 +20,6 @@ import java.security.KeyPairGenerator
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
 
 
 class CustomRequest(listeners: Listeners, context: Context) {
@@ -82,10 +83,10 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 Log.d("A", "/post request fail! Error: ${error.printStackTrace()}")
             }) {
 
+            @RequiresApi(Build.VERSION_CODES.M)
             override fun getParams(): MutableMap<String, String> {
                 val localParams = HashMap<String, String>()
                 val keypair = generateKeyPair()
-                val keyText = encodeToString(keypair.public.encoded, DEFAULT)
 
                 val data = HashMap<String, String>()
 
@@ -95,21 +96,44 @@ class CustomRequest(listeners: Listeners, context: Context) {
                     data.put(it.key, it.value)
                 }
 
-                localParams.put("key", keyText)
-                localParams.put("data", data.toString())
 
-                return localParams
+                val kgen: KeyGenerator = KeyGenerator.getInstance("AES")
+                kgen.init(128) //set keysize, can be 128, 192, and 256
+                val key = kgen.generateKey()
+//                localParams.put("key", key.encoded.toString())
+                localParams.put("data", data.toString())
+                val encryptText: ByteArray = localParams.toString().toByteArray()
+                val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+                cipher.init(Cipher.ENCRYPT_MODE, key)
+                val ciphertext: ByteArray = cipher.doFinal(encryptText)
+
+                val dataFinal = hashMapOf<String, String>()
+                val keyText = encodeToString(keypair.public.encoded, DEFAULT)
+
+                dataFinal.put("data", String(ciphertext))
+                dataFinal.put("publicKey", keyText)
+
+                val rsaCipher =
+                    Cipher.getInstance("RSA/ECB/PKCS1Padding")
+                rsaCipher.init(Cipher.PUBLIC_KEY, keypair.public)
+                val encryptedKey =
+                    rsaCipher.doFinal(key.encoded)
+
+                val finalData: HashMap<String, String> = hashMapOf()
+                finalData.put("data", dataFinal.toString())
+                finalData.put("keyblock", String(encryptedKey))
+                return finalData
             }
         }
         queue.add(jsonRequest)
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     fun generateKeyPair(): KeyPair {
         val generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA)
 
         generator.initialize(2048, SecureRandom())
-        val keypair = generator.genKeyPair()
-        return keypair
+        return generator.genKeyPair()
     }
 
     fun request(url: String, context: Context) {
