@@ -2,21 +2,31 @@ package apiLib
 
 import android.content.Context
 import android.net.Uri
+import android.security.keystore.KeyProperties
+import android.util.Base64
+import android.util.Base64.*
 import android.util.Log
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import com.example.aperturedigital.R
 import lib.Listeners
 import org.json.JSONObject
-import java.lang.Exception
+import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.security.SecureRandom
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
 
 
-class CustomRequest(listeners: Listeners) {
+class CustomRequest(listeners: Listeners, context: Context) {
     var baseUrl: String = ""
     var paramsFromCall: HashMap<String, String> = hashMapOf()
     lateinit var subKey: String
     val localListener = listeners
+    val appContext = context
 
     lateinit var requestBody: String
 
@@ -74,23 +84,32 @@ class CustomRequest(listeners: Listeners) {
 
             override fun getParams(): MutableMap<String, String> {
                 val localParams = HashMap<String, String>()
-                localParams.put("apiKey", subKey)
-                if (paramsFromCall.contains("name")){
-                    localParams.put("name", paramsFromCall["name"] as String)
-                }
-                if (paramsFromCall.count() > 2){
-                    localParams.put("barcode", paramsFromCall["barcode"] as String)
-                    localParams.put("name", paramsFromCall["name"] as String)
-                    localParams.put("description", paramsFromCall["description"] as String)
-                    localParams.put("source", paramsFromCall["source"] as String)
-                    localParams.put("ingredients", paramsFromCall["ingredients"] as String)
+                val keypair = generateKeyPair()
+                val keyText = encodeToString(keypair.public.encoded, DEFAULT)
 
+                val data = HashMap<String, String>()
+
+//                localParams.put("")
+                data.put("apiKey", subKey)
+                paramsFromCall.forEach{
+                    data.put(it.key, it.value)
                 }
+
+                localParams.put("key", keyText)
+                localParams.put("data", data.toString())
 
                 return localParams
             }
         }
         queue.add(jsonRequest)
+    }
+
+    fun generateKeyPair(): KeyPair {
+        val generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA)
+
+        generator.initialize(2048, SecureRandom())
+        val keypair = generator.genKeyPair()
+        return keypair
     }
 
     fun request(url: String, context: Context) {
