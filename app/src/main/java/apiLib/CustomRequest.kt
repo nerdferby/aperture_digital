@@ -1,9 +1,11 @@
 package apiLib
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import android.security.keystore.KeyProperties
+import android.util.Base64
 import android.util.Base64.DEFAULT
 import android.util.Base64.encodeToString
 import android.util.Log
@@ -12,14 +14,19 @@ import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import lib.Encryption
+import com.example.aperturedigital.R
 import lib.Listeners
 import org.json.JSONObject
+import java.nio.charset.Charset
+import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.SecureRandom
+import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 
 class CustomRequest(listeners: Listeners, context: Context) {
@@ -87,10 +94,10 @@ class CustomRequest(listeners: Listeners, context: Context) {
             override fun getParams(): MutableMap<String, String> {
                 val localParams = HashMap<String, String>()
                 val keypair = generateKeyPair()
-
                 val data = HashMap<String, String>()
-
-//                localParams.put("")
+                val r = SecureRandom()
+                val iv = ByteArray(16)
+                r.nextBytes(iv)
                 data.put("apiKey", subKey)
                 paramsFromCall.forEach{
                     data.put(it.key, it.value)
@@ -100,28 +107,43 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val kgen: KeyGenerator = KeyGenerator.getInstance("AES")
                 kgen.init(128) //set keysize, can be 128, 192, and 256
                 val key = kgen.generateKey()
-//                localParams.put("key", key.encoded.toString())
+                val prefs: SharedPreferences =
+                    (context as Context).getSharedPreferences("publicKey", Context.MODE_PRIVATE)
+                if (prefs.getString("publicKey", "") == ""){
+                    prefs.edit().putString("publicKey", encodeToString(keypair.public.encoded, DEFAULT)).commit()
+                }
+
                 localParams.put("data", data.toString())
-                val encryptText: ByteArray = localParams.toString().toByteArray()
-                val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-                cipher.init(Cipher.ENCRYPT_MODE, key)
+                val encryptText: ByteArray = localParams.toString().toByteArray(Charsets.UTF_8)
+                val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+
+                cipher.init(Cipher.ENCRYPT_MODE, key, IvParameterSpec(iv))
                 val ciphertext: ByteArray = cipher.doFinal(encryptText)
 
                 val dataFinal = hashMapOf<String, String>()
-                val keyText = encodeToString(keypair.public.encoded, DEFAULT)
+                val publicKey = context.getString(R.string.publicKey)
 
-                dataFinal.put("data", String(ciphertext))
-                dataFinal.put("publicKey", keyText)
+                val decodedKey: ByteArray = Base64.decode(prefs.getString("publicKey", ""), DEFAULT)
+                val keySpec =
+                    X509EncodedKeySpec(decodedKey)
+                val keyFactory = KeyFactory.getInstance("RSA")
+                val pubKey = keyFactory.generatePublic(keySpec)
+
+                dataFinal.put("data", Base64.encodeToString(ciphertext, DEFAULT))
+                dataFinal.put("publicKey", publicKey)
 
                 val rsaCipher =
-                    Cipher.getInstance("RSA/ECB/PKCS1Padding")
-                rsaCipher.init(Cipher.PUBLIC_KEY, keypair.public)
+                    Cipher.getInstance("RSA")
+                rsaCipher.init(Cipher.PUBLIC_KEY, pubKey)
                 val encryptedKey =
                     rsaCipher.doFinal(key.encoded)
+                val decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
 
+                decryptCipher.init(Cipher.DECRYPT_MODE, key, IvParameterSpec(iv))
+                val deCrypted = decryptCipher.doFinal(ciphertext)
                 val finalData: HashMap<String, String> = hashMapOf()
                 finalData.put("data", dataFinal.toString())
-                finalData.put("keyblock", String(encryptedKey))
+                finalData.put("keyblock", Base64.encodeToString(encryptedKey, DEFAULT))
                 return finalData
             }
         }
