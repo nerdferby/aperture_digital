@@ -79,6 +79,7 @@ class CustomRequest(listeners: Listeners, context: Context) {
             Response.Listener { response ->
                 try {
                     val convertedObject: JSONObject = JSONObject(response)
+                    //decrypt the response data.
                     localListener.fireDatabaseChangeListener(convertedObject)
                 }catch (e: Exception){
                     val response = JSONObject()
@@ -92,7 +93,6 @@ class CustomRequest(listeners: Listeners, context: Context) {
 
             @RequiresApi(Build.VERSION_CODES.M)
             override fun getParams(): MutableMap<String, String> {
-                val localParams = HashMap<String, String>()
                 val keypair = generateKeyPair()
                 val data = HashMap<String, String>()
                 val r = SecureRandom()
@@ -109,7 +109,6 @@ class CustomRequest(listeners: Listeners, context: Context) {
                  * then gets the response and has to decrypt using the private key
                  */
 
-
                 val kgen: KeyGenerator = KeyGenerator.getInstance("AES")
                 kgen.init(128) //set keysize, can be 128, 192, and 256
                 val key = kgen.generateKey() //AES KEY
@@ -120,11 +119,11 @@ class CustomRequest(listeners: Listeners, context: Context) {
                     prefs.edit().putString("publicKey", encodeToString(keypair.public.encoded, DEFAULT)).commit()
                 }
 
-                val encryptText: ByteArray = data.toString().toByteArray(Charsets.UTF_8)
-                val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-
-                cipher.init(Cipher.ENCRYPT_MODE, key /*AES KEY*/, IvParameterSpec(iv))
-                val ciphertext: ByteArray = cipher.doFinal(encryptText)
+//                val encryptText: ByteArray = data.toString().toByteArray(Charsets.UTF_8)
+//                val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+//
+//                cipher.init(Cipher.ENCRYPT_MODE, key /*AES KEY*/, IvParameterSpec(iv))
+//                val ciphertext: ByteArray = cipher.doFinal(encryptText)
 
                 val dataFinal = hashMapOf<String, String>()
                 val publicKey = prefs.getString("publicKey", "") as String
@@ -138,12 +137,13 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val keyFactory = KeyFactory.getInstance("RSA")
                 val pubKey = keyFactory.generatePublic(keySpec) //RSA KEY
 
-                dataFinal.put("data", encodeToString(ciphertext, DEFAULT))
+                dataFinal.put("data", data.toString())
                 dataFinal.put("publicKey", publicKey)
+                val encryptText: ByteArray = dataFinal.toString().toByteArray(Charsets.UTF_8)
 
-//                val byteKey: ByteArray = key.encoded.toByteArray(Charsets.UTF_8)
-
-
+                val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+                cipher.init(Cipher.ENCRYPT_MODE, key /*AES KEY*/, IvParameterSpec(iv))
+                val ciphertext: ByteArray = cipher.doFinal(encryptText)
 
                 val rsaCipher =
                     Cipher.getInstance("RSA/None/NoPadding")
@@ -152,7 +152,7 @@ class CustomRequest(listeners: Listeners, context: Context) {
                     rsaCipher.doFinal(key.encoded)
 
                 val finalData: HashMap<String, String> = hashMapOf()
-                finalData.put("data", dataFinal.toString())
+                finalData.put("data", encodeToString(ciphertext, DEFAULT))
                 finalData.put("keyblock", encodeToString(encryptedKey, DEFAULT))
                 return finalData
             }
@@ -186,7 +186,6 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 return HashMap()
             }
         }
-
         queue.add(jsonRequest)
     }
 }
