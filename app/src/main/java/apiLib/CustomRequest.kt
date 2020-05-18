@@ -103,47 +103,56 @@ class CustomRequest(listeners: Listeners, context: Context) {
                     data.put(it.key, it.value)
                 }
 
+                /**
+                 * First ask for the servers public key.(or store it to reduce a call)
+                 * then encrypt the data and encrypt the AES key with the servers public key
+                 * then gets the response and has to decrypt using the private key
+                 */
+
 
                 val kgen: KeyGenerator = KeyGenerator.getInstance("AES")
                 kgen.init(128) //set keysize, can be 128, 192, and 256
-                val key = kgen.generateKey()
+                val key = kgen.generateKey() //AES KEY
+
                 val prefs: SharedPreferences =
                     (context as Context).getSharedPreferences("publicKey", Context.MODE_PRIVATE)
                 if (prefs.getString("publicKey", "") == ""){
                     prefs.edit().putString("publicKey", encodeToString(keypair.public.encoded, DEFAULT)).commit()
                 }
 
-                localParams.put("data", data.toString())
-                val encryptText: ByteArray = localParams.toString().toByteArray(Charsets.UTF_8)
+                val encryptText: ByteArray = data.toString().toByteArray(Charsets.UTF_8)
                 val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
 
-                cipher.init(Cipher.ENCRYPT_MODE, key, IvParameterSpec(iv))
+                cipher.init(Cipher.ENCRYPT_MODE, key /*AES KEY*/, IvParameterSpec(iv))
                 val ciphertext: ByteArray = cipher.doFinal(encryptText)
 
                 val dataFinal = hashMapOf<String, String>()
-                val publicKey = context.getString(R.string.publicKey)
+                val publicKey = prefs.getString("publicKey", "") as String
 
-                val decodedKey: ByteArray = Base64.decode(prefs.getString("publicKey", ""), DEFAULT)
+                val serverPublicKey = context.getString(R.string.serverPublicKey)
+
+                val decodedKey: ByteArray = Base64.decode(serverPublicKey, DEFAULT)
                 val keySpec =
                     X509EncodedKeySpec(decodedKey)
                 val keyFactory = KeyFactory.getInstance("RSA")
-                val pubKey = keyFactory.generatePublic(keySpec)
+                val pubKey = keyFactory.generatePublic(keySpec) //RSA KEY
 
-                dataFinal.put("data", Base64.encodeToString(ciphertext, DEFAULT))
+                dataFinal.put("data", encodeToString(ciphertext, DEFAULT))
                 dataFinal.put("publicKey", publicKey)
 
+//                val byteKey: ByteArray = key.encoded.toByteArray(Charsets.UTF_8)
+
+
+
                 val rsaCipher =
-                    Cipher.getInstance("RSA")
-                rsaCipher.init(Cipher.PUBLIC_KEY, pubKey)
+                    Cipher.getInstance("RSA/None/NoPadding")
+                rsaCipher.init(Cipher.PUBLIC_KEY, pubKey)//RSA Server key
                 val encryptedKey =
                     rsaCipher.doFinal(key.encoded)
-                val decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
 
-                decryptCipher.init(Cipher.DECRYPT_MODE, key, IvParameterSpec(iv))
-                val deCrypted = decryptCipher.doFinal(ciphertext)
                 val finalData: HashMap<String, String> = hashMapOf()
                 finalData.put("data", dataFinal.toString())
-                finalData.put("keyblock", Base64.encodeToString(encryptedKey, DEFAULT))
+                finalData.put("keyblock", encodeToString(encryptedKey, DEFAULT))
                 return finalData
             }
         }

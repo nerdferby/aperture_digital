@@ -14,7 +14,7 @@ class DatabaseConnection(context: Context, listener: DatabaseChangeListener, lis
     fun getCertainProduct(gtin: String){
         val params = HashMap<String, String>()
 
-        params.put("op", "getCertainProductFromBarcode")
+        params.put("op", "getProductFromBarcode")
         params.put("barcode", gtin)
         //change this to the actual database
         val apiCall = ApiCall("gpm.digiavit.co.uk", params, mainContext, key, localListeners)
