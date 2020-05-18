@@ -129,8 +129,9 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val dataFinal = hashMapOf<String, String>()
                 val publicKey = prefs.getString("publicKey", "") as String
 
-                val serverPublicKey = context.getString(R.string.serverPublicKey)
-
+                var serverPublicKey = context.getString(R.string.serverPublicKey)
+                serverPublicKey = serverPublicKey.replace("-----BEGIN PUBLIC KEY----- ", "")
+                serverPublicKey = serverPublicKey.replace(" -----END PUBLIC KEY-----", "")
                 val decodedKey: ByteArray = Base64.decode(serverPublicKey, DEFAULT)
                 val keySpec =
                     X509EncodedKeySpec(decodedKey)
