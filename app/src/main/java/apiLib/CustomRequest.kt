@@ -23,11 +23,11 @@ import java.security.KeyPairGenerator
 import java.security.SecureRandom
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
-import java.util.*
+import java.util.Base64.getMimeEncoder
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
-import kotlin.collections.HashMap
 
 
 class CustomRequest(listeners: Listeners, context: Context) {
@@ -36,6 +36,7 @@ class CustomRequest(listeners: Listeners, context: Context) {
     lateinit var subKey: String
     val localListener = listeners
     val appContext = context
+    lateinit var aesKey: SecretKey
 
     lateinit var requestBody: String
 
@@ -57,6 +58,8 @@ class CustomRequest(listeners: Listeners, context: Context) {
         }else{
             builder.scheme("https")
                 .authority(baseUrl)
+                //delete this line after tests are done with Test.php
+//                .appendEncodedPath("Test.php")
         }
 
         for ((k, v) in paramsFromCall) {
@@ -79,6 +82,12 @@ class CustomRequest(listeners: Listeners, context: Context) {
         val jsonRequest = object : StringRequest(Method.POST, url,
             Response.Listener { response ->
                 try {
+                    val iv = ByteArray(16)
+                    val decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+                    decryptCipher.init(Cipher.DECRYPT_MODE, aesKey, IvParameterSpec(iv))
+                    val deCrypted = decryptCipher.doFinal(response.toByteArray(Charsets.UTF_8))
+
+
                     val convertedObject: JSONObject = JSONObject(response)
                     //decrypt the response data.
                     localListener.fireDatabaseChangeListener(convertedObject)
@@ -112,10 +121,11 @@ class CustomRequest(listeners: Listeners, context: Context) {
 
                 val kgen: KeyGenerator = KeyGenerator.getInstance("AES")
                 kgen.init(128) //set keysize, can be 128, 192, and 256
-                val key = kgen.generateKey() //AES KEY
+                aesKey = kgen.generateKey() //AES KEY
 
                 val prefs: SharedPreferences =
                     (context as Context).getSharedPreferences("publicKey", Context.MODE_PRIVATE)
+
                 if (prefs.getString("publicKey", "") == ""){
                     prefs.edit().putString("publicKey", encodeToString(keypair.public.encoded, DEFAULT)).commit()
                 }
@@ -137,21 +147,25 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val keySpec =
                     X509EncodedKeySpec(decodedKey)
                 val keyFactory = KeyFactory.getInstance("RSA")
+//                val pubKey: RSAPublicKey = keyFactory.generatePublic(keySpec) as RSAPublicKey
+
+
                 val pubKey = keyFactory.generatePublic(keySpec) //RSA KEY
 
-                dataFinal.put("data", data.toString())
+                dataFinal.put("data", JSONObject(data as Map<*, *>).toString())
                 dataFinal.put("publicKey", serverPublicKey)
-                val encryptText: ByteArray = dataFinal.toString().toByteArray(Charsets.UTF_8)
+                val sendData = JSONObject(dataFinal as Map<*, *>).toString()
+                val encryptText: ByteArray = sendData.toByteArray(Charsets.UTF_8)
 
                 val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-                cipher.init(Cipher.ENCRYPT_MODE, key /*AES KEY*/, IvParameterSpec(iv))
+                cipher.init(Cipher.ENCRYPT_MODE, aesKey /*AES KEY*/, IvParameterSpec(iv))
                 val ciphertext: ByteArray = cipher.doFinal(encryptText)
 
                 val rsaCipher =
                     Cipher.getInstance("RSA/None/NoPadding")
                 rsaCipher.init(Cipher.PUBLIC_KEY, pubKey)//RSA Server key
                 val encryptedKey =
-                    rsaCipher.doFinal(key.encoded)
+                    rsaCipher.doFinal(aesKey.encoded)
 
                 var serverPrivateKey = context.getString(R.string.serverPrivate)
                 serverPrivateKey = serverPrivateKey.replace("-----BEGIN PRIVATE KEY----- ", "")
@@ -163,15 +177,30 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val prKey = factor.generatePrivate(k) //RSA KEY
 
                 //DELETE THIS AND THE PRIVATE KEY ONCE TESTING IS DONE
+
+                val testKey = "kZzFu4s3x91svg+lo9+vKMzcRNY4s2yf8YgdZV0dJvHqOoPckSdji8PlxJ2uo/4hk/zOyVeJXQjN\n" +
+                        "f2vXCb/rszDmtSRDPyveCfENAl/PlffHJjd8btpSyorDUrTI7tCZaX1sXzzP9u9bZ8kY8bVeq+It\n" +
+                        "8d1ac95uwsVp/Ir1VROdrHmcaSsUNZGZxrLuqzEFxjRkfSRLV/a0W0qBV9lwLoZWckzUp3wzlRWL\n" +
+                        "r+W3NOdKRz88DXC838Cwx/s++jGQqyBFjhTPgs9zDuA1qP9S6QFZsf0JkpvrQ9XGuJr8smHmcZ41\n" +
+                        "/ykxQ/w/Peu9UVEWZYYBcDxmnq3fPuUS/warug=="
                 val decryptCipher = Cipher.getInstance("RSA/None/NoPadding")
                 decryptCipher.init(Cipher.PRIVATE_KEY, prKey)
-                val deCrypted = decryptCipher.doFinal(encryptedKey)
-
+                val deCrypted = decryptCipher.doFinal(Base64.decode(testKey, DEFAULT))
+                var new = ""
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    new = getMimeEncoder().encodeToString(deCrypted)
+                }
                 val newDecryptedKey = unpadZerosToGetAesKey(deCrypted)
 
+
                 val finalData: HashMap<String, String> = hashMapOf()
-                finalData.put("data", encodeToString(ciphertext, DEFAULT))
-                finalData.put("keyblock", encodeToString(encryptedKey, DEFAULT))
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    finalData.put("data", getMimeEncoder().encodeToString(ciphertext))
+                    finalData.put("keyblock", getMimeEncoder().encodeToString(encryptedKey))
+//                    val phpEncoded = getMimeEncoder().encodeToString(ciphertext)
+                }
+//                finalData.put("data", encodeToString(ciphertext, DEFAULT))
+//                finalData.put("keyblock", encodeToString(encryptedKey, DEFAULT))
                 return finalData
             }
         }
