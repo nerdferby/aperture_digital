@@ -108,9 +108,12 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val r = SecureRandom()
                 val iv = ByteArray(16)
 //                r.nextBytes(iv)
+                val dataJson = JSONObject()
+                dataJson.put("apiKey", subKey)
                 data.put("apiKey", subKey)
                 paramsFromCall.forEach{
                     data.put(it.key, it.value)
+                    dataJson.put(it.key, it.value)
                 }
 
                 /**
@@ -152,10 +155,9 @@ class CustomRequest(listeners: Listeners, context: Context) {
 
                 val pubKey = keyFactory.generatePublic(keySpec) //RSA KEY
 
-                dataFinal.put("data", JSONObject(data as Map<*, *>).toString())
+                dataFinal.put("data", dataJson.toString())
                 dataFinal.put("publicKey", serverPublicKey)
-                val sendData = JSONObject(dataFinal as Map<*, *>).toString()
-                val encryptText: ByteArray = sendData.toByteArray(Charsets.UTF_8)
+                val encryptText: ByteArray = dataFinal.toString().toByteArray(Charsets.UTF_8)
 
                 val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
                 cipher.init(Cipher.ENCRYPT_MODE, aesKey /*AES KEY*/, IvParameterSpec(iv))
