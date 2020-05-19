@@ -17,16 +17,17 @@ import com.android.volley.toolbox.Volley
 import com.example.aperturedigital.R
 import lib.Listeners
 import org.json.JSONObject
-import java.nio.charset.Charset
 import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.SecureRandom
+import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
+import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
+import kotlin.collections.HashMap
 
 
 class CustomRequest(listeners: Listeners, context: Context) {
@@ -97,7 +98,7 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val data = HashMap<String, String>()
                 val r = SecureRandom()
                 val iv = ByteArray(16)
-                r.nextBytes(iv)
+//                r.nextBytes(iv)
                 data.put("apiKey", subKey)
                 paramsFromCall.forEach{
                     data.put(it.key, it.value)
@@ -119,6 +120,7 @@ class CustomRequest(listeners: Listeners, context: Context) {
                     prefs.edit().putString("publicKey", encodeToString(keypair.public.encoded, DEFAULT)).commit()
                 }
 
+
 //                val encryptText: ByteArray = data.toString().toByteArray(Charsets.UTF_8)
 //                val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
 //
@@ -127,7 +129,7 @@ class CustomRequest(listeners: Listeners, context: Context) {
 
                 val dataFinal = hashMapOf<String, String>()
                 val publicKey = prefs.getString("publicKey", "") as String
-
+//                publicKey = context.getString(R.string.serverPublicKey)
                 var serverPublicKey = context.getString(R.string.serverPublicKey)
                 serverPublicKey = serverPublicKey.replace("-----BEGIN PUBLIC KEY----- ", "")
                 serverPublicKey = serverPublicKey.replace(" -----END PUBLIC KEY-----", "")
@@ -138,7 +140,7 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val pubKey = keyFactory.generatePublic(keySpec) //RSA KEY
 
                 dataFinal.put("data", data.toString())
-                dataFinal.put("publicKey", publicKey)
+                dataFinal.put("publicKey", serverPublicKey)
                 val encryptText: ByteArray = dataFinal.toString().toByteArray(Charsets.UTF_8)
 
                 val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
@@ -151,6 +153,22 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val encryptedKey =
                     rsaCipher.doFinal(key.encoded)
 
+                var serverPrivateKey = context.getString(R.string.serverPrivate)
+                serverPrivateKey = serverPrivateKey.replace("-----BEGIN PRIVATE KEY----- ", "")
+                serverPrivateKey = serverPrivateKey.replace(" -----END PRIVATE KEY-----", "")
+                val privateKeyDecoded: ByteArray = Base64.decode(serverPrivateKey, DEFAULT)
+                val k =
+                    PKCS8EncodedKeySpec(privateKeyDecoded)
+                val factor = KeyFactory.getInstance("RSA")
+                val prKey = factor.generatePrivate(k) //RSA KEY
+
+                //DELETE THIS AND THE PRIVATE KEY ONCE TESTING IS DONE
+                val decryptCipher = Cipher.getInstance("RSA/None/NoPadding")
+                decryptCipher.init(Cipher.PRIVATE_KEY, prKey)
+                val deCrypted = decryptCipher.doFinal(encryptedKey)
+
+                val newDecryptedKey = unpadZerosToGetAesKey(deCrypted)
+
                 val finalData: HashMap<String, String> = hashMapOf()
                 finalData.put("data", encodeToString(ciphertext, DEFAULT))
                 finalData.put("keyblock", encodeToString(encryptedKey, DEFAULT))
@@ -158,6 +176,14 @@ class CustomRequest(listeners: Listeners, context: Context) {
             }
         }
         queue.add(jsonRequest)
+    }
+
+    fun unpadZerosToGetAesKey(byteIn: ByteArray): ByteArray {
+        var i = 0
+        while (byteIn[i].toInt() == 0) i++
+        var len = byteIn.size - i
+        len = if (len <= 16) 16 else if (len <= 24) 24 else 32
+        return byteIn.copyOfRange(byteIn.size - len, byteIn.size)
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
