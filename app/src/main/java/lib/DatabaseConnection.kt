@@ -15,7 +15,7 @@ class DatabaseConnection(context: Context, listener: DatabaseChangeListener, lis
     fun getPublicKey(){
         val params = HashMap<String, String>()
 
-        params.put("keypairrequest", "true")
+        params.put("keypairRequest", "true")
         //change this to the actual database
         val apiCall = ApiCall("gpm.digiavit.co.uk", params, mainContext, key, localListeners)
         localListeners.addDatabaseChangeListener(dbListener)
@@ -58,7 +58,7 @@ class DatabaseConnection(context: Context, listener: DatabaseChangeListener, lis
     fun searchProducts(product_name: String){
         val params = HashMap<String, String>()
 
-        params.put("op", "searchProducts")
+        params.put("op", "searchProductsByName")
         params.put("name", product_name)
 
         //change this to the actual database

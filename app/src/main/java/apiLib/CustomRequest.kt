@@ -178,7 +178,7 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 aesKey = kgen.generateKey() //AES KEY
                 val prefs: SharedPreferences =
                     (context as Context).getSharedPreferences("publicKey", Context.MODE_PRIVATE)
-                val dataFinal = JSONObject()
+
                 //this one is sent to the server
                 var publicKey = prefs.getString("publicKey", "") as String
                 //this one is used to encrypt the AES key
@@ -192,10 +192,15 @@ class CustomRequest(listeners: Listeners, context: Context) {
                     X509EncodedKeySpec(decodedKey)
                 val keyFactory = KeyFactory.getInstance("RSA")
 //                val pubKey: RSAPublicKey = keyFactory.generatePublic(keySpec) as RSAPublicKey
-
-
                 val pubKey = keyFactory.generatePublic(keySpec) //RSA KEY
+                //AES KEY Encryption
+                val rsaCipher =
+                    Cipher.getInstance("RSA/None/NoPadding")
+                rsaCipher.init(Cipher.PUBLIC_KEY, pubKey)//RSA Server key
+                val encryptedKey =
+                    rsaCipher.doFinal(aesKey.encoded)
 
+                val dataFinal = JSONObject()
                 dataFinal.put("data", dataJson.toString())
                 dataFinal.put("publicKey", publicKey)
                 val encryptText: ByteArray = dataFinal.toString().toByteArray(Charsets.UTF_8)
@@ -204,14 +209,6 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
                 cipher.init(Cipher.ENCRYPT_MODE, aesKey /*AES KEY*/, IvParameterSpec(iv))
                 val ciphertext: ByteArray = cipher.doFinal(encryptText)
-
-                //AES KEY Encryption
-                val rsaCipher =
-                    Cipher.getInstance("RSA/None/NoPadding")
-                rsaCipher.init(Cipher.PUBLIC_KEY, pubKey)//RSA Server key
-                val encryptedKey =
-                    rsaCipher.doFinal(aesKey.encoded)
-
 
                 val finalData: HashMap<String, String> = hashMapOf()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -235,15 +232,13 @@ class CustomRequest(listeners: Listeners, context: Context) {
         return byteIn.copyOfRange(byteIn.size - len, byteIn.size)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    fun generateKeyPair(): KeyPair {
-        val generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA)
-
-        generator.initialize(1024)
-        return generator.genKeyPair()
-    }
-
-
+//    @RequiresApi(Build.VERSION_CODES.M)
+//    fun generateKeyPair(): KeyPair {
+//        val generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA)
+//
+//        generator.initialize(1024)
+//        return generator.genKeyPair()
+//    }
 
     fun request(url: String, context: Context) {
         val queue = Volley.newRequestQueue(context)

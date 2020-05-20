@@ -41,36 +41,21 @@ class ProductFragment: Fragment() {
         val settings = ImplementSettings(context as Context)
         settings.changeToPreference(constraintLayoutProductContent, "Search")
         settings.changeTextColor(constraintLayoutProductContent)
-
-
         textViewProduct.text = productName
         checkVeganDb(productBarcode)
         view.findViewById<TextView>(R.id.textViewVegan).text = ""
-        //Send a database SELECT to find out products information
     }
 
     /**
      * First get the info of the product from the database
      * Check if it is vegan from the barcode
      */
-//    private fun checkFromBarcode(){
-//        val db = DatabaseConnection(context as Context, databaseListener, listenerClass, (context as Context).getString(R.string.databaseApiKey))
-//        db.getCertainProduct(productBarcode)
-//    }
 
     private fun checkVeganDb(barcode: String){
         val db = DatabaseConnection(context as Context, databaseVeganListener, veganListenerClass, (context as Context).getString(R.string.databaseApiKey))
         db.isVegan(barcode)
     }
 
-//    val databaseListener = object: DatabaseChangeListener{
-//        override fun onDatabaseChange(response: JSONObject) {
-//            val product = response["data"] as JSONObject
-//
-//            checkVeganDb(product["barcode"].toString())
-//        }
-//
-//    }
     val databaseVeganListener = object: DatabaseChangeListener{
         override fun onDatabaseChange(response: JSONObject) {
             val textViewVegan = view!!.findViewById<TextView>(R.id.textViewVegan)
