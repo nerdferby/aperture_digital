@@ -71,7 +71,7 @@ class DatabaseConnection(context: Context, listener: DatabaseChangeListener, lis
         val params = HashMap<String, String>()
 
         params.put("op", "isItVegan")
-        params.put("name", barcode)
+        params.put("barcode", barcode)
 
         //change this to the actual database
         val apiCall = ApiCall("gpm.digiavit.co.uk", params, mainContext, key, localListeners)

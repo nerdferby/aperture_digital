@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment
 import com.example.aperturedigital.R
 import kotlinx.android.synthetic.main.fragment_search.*
 import lib.*
+import org.json.JSONArray
 import org.json.JSONObject
 
 
@@ -33,6 +34,8 @@ class SearchFragment: Fragment() {
     lateinit var listViewProduct: ListView
 
     val productFragment = ProductFragment()
+
+    val productBarcodes = mutableListOf<String>()
 
     /**
      * Trying to change color of the searchView to fit the colorTheme picked.
@@ -92,9 +95,10 @@ class SearchFragment: Fragment() {
         override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
             Log.d("test", "item $position")
             val productName = listViewProduct.getItemAtPosition(position).toString()
-
+            val productBarcode = productBarcodes[position]
             val bundle = Bundle()
             bundle.putString("productName", productName)
+            bundle.putString("productBarcode", productBarcode)
             productFragment.arguments = bundle
             this@SearchFragment.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutSearchContent, productFragment).commit()
         }
@@ -143,21 +147,29 @@ class SearchFragment: Fragment() {
     private var databaseListener = object: DatabaseChangeListener {
         override fun onDatabaseChange(response: JSONObject) {
             suggestionNameList.clear()
-            val products = response["products"] as JSONObject
-            products.keys().forEach {
-                val product = products.get(it) as JSONObject
+            val products = response["data"] as JSONArray
+            for (index in 0 .. products.length()){
+                val product = products.get(index) as JSONObject
                 suggestionNameList.add(product["name"].toString())
+
             }
+
+//            products.keys().forEach {
+//                val product = products.get(it) as JSONObject
+//                suggestionNameList.add(product["name"].toString())
+//            }
         }
     }
 
     private var databaseSearchListeners = object: DatabaseChangeListener {
         override fun onDatabaseChange(response: JSONObject) {
-            val products = response["products"] as JSONObject
+            val products = response["data"] as JSONArray
             val productsList = mutableListOf<String>()
-            products.keys().forEach {
-                val product = products.get(it) as JSONObject
+
+            for (index in 0 until products.length()){
+                val product = products.get(index) as JSONObject
                 productsList.add(product["name"].toString())
+                productBarcodes.add(product["barcode"].toString())
             }
             val customAdapter = CustomAdapter(context as Context, productsList)
             val listViewProduct = view!!.findViewById<ListView>(R.id.productList)

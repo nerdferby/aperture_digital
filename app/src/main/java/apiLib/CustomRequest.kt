@@ -118,7 +118,6 @@ class CustomRequest(listeners: Listeners, context: Context) {
             Response.Listener { response ->
                 try {
                     val convertedObject: JSONObject = JSONObject(response)
-
                     val prefs: SharedPreferences =
                         (context as Context).getSharedPreferences("publicKey", Context.MODE_PRIVATE)
                     var prvKey = prefs.getString("privateKey",  "") as String
@@ -129,7 +128,6 @@ class CustomRequest(listeners: Listeners, context: Context) {
                     val keySpec =
                         PKCS8EncodedKeySpec(prvKeyBytes)
                     val keyFactory = KeyFactory.getInstance("RSA")
-//                val pubKey: RSAPublicKey = keyFactory.generatePublic(keySpec) as RSAPublicKey
                     val prvKeyDecoded = keyFactory.generatePrivate(keySpec) //RSA KEY
 
                     val keyDecryptCipher = Cipher.getInstance("RSA/None/PKCS1Padding")
@@ -137,8 +135,7 @@ class CustomRequest(listeners: Listeners, context: Context) {
                     val keyBlock = convertedObject["keyblock"].toString()
                     val tempByteArray = getMimeDecoder().decode(keyBlock)
                     val decryptedKey = keyDecryptCipher.doFinal(tempByteArray)
-//                    val newDecryptedKey = unpadZerosToGetAesKey(decryptedKey)
-//                    newDecryptedKey
+
 
                     val decryptedAesKey = SecretKeySpec(decryptedKey, "AES") //this is correct
                     val encryptedDataBytes = Base64.decode(convertedObject["data"].toString(), DEFAULT)
@@ -148,9 +145,8 @@ class CustomRequest(listeners: Listeners, context: Context) {
                     decryptCipher.init(Cipher.DECRYPT_MODE, decryptedAesKey, IvParameterSpec(iv))
                     val decryptedData = decryptCipher.doFinal(encryptedDataBytes)
 
-                    val decryptedRsponseData = Base64.encodeToString(decryptedData, DEFAULT) as String
-
-                    val finalConvertedObject: JSONObject = JSONObject(decryptedRsponseData)
+                    val decryptedResponseData = String(decryptedData)
+                    val finalConvertedObject: JSONObject = JSONObject(decryptedResponseData)
                     //decrypt the response data.
                     localListener.fireDatabaseChangeListener(finalConvertedObject)
                 }catch (e: Exception){
@@ -166,31 +162,26 @@ class CustomRequest(listeners: Listeners, context: Context) {
             @SuppressLint("NewApi")
             @RequiresApi(Build.VERSION_CODES.M)
             override fun getParams(): MutableMap<String, String> {
-//                val keypair = generateKeyPair()
                 val iv = ByteArray(16)
                 val dataJson = JSONObject()
                 dataJson.put("apiKey", subKey)
                 paramsFromCall.forEach{
                     dataJson.put(it.key, it.value)
                 }
-
                 /**
                  * First ask for the servers public key.(or store it to reduce a call)
                  * then encrypt the data and encrypt the AES key with the servers public key
                  * then gets the response and has to decrypt using the private key
                  */
-
                 val kgen: KeyGenerator = KeyGenerator.getInstance("AES")
                 kgen.init(128) //set keysize, can be 128, 192, and 256
                 aesKey = kgen.generateKey() //AES KEY
-
                 val prefs: SharedPreferences =
                     (context as Context).getSharedPreferences("publicKey", Context.MODE_PRIVATE)
-
                 val dataFinal = JSONObject()
                 //this one is sent to the server
                 var publicKey = prefs.getString("publicKey", "") as String
-                //this one is not
+                //this one is used to encrypt the AES key
                 var serverPublicKey = context.getString(R.string.serverPublicKey)
                 serverPublicKey = serverPublicKey.replace("-----BEGIN PUBLIC KEY-----", "")
                 serverPublicKey = serverPublicKey.replace("-----END PUBLIC KEY-----", "")
@@ -221,24 +212,6 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val encryptedKey =
                     rsaCipher.doFinal(aesKey.encoded)
 
-                var serverPrivateKey = context.getString(R.string.serverPrivate)
-                serverPrivateKey = serverPrivateKey.replace("-----BEGIN PRIVATE KEY----- ", "")
-                serverPrivateKey = serverPrivateKey.replace(" -----END PRIVATE KEY-----", "")
-                val privateKeyDecoded: ByteArray = Base64.decode(serverPrivateKey, DEFAULT)
-                val k =
-                    PKCS8EncodedKeySpec(privateKeyDecoded)
-                val factor = KeyFactory.getInstance("RSA")
-                val prKey = factor.generatePrivate(k) //RSA KEY
-
-                //DELETE THIS AND THE PRIVATE KEY ONCE TESTING IS DONE
-                val decryptCipher = Cipher.getInstance("RSA/None/NoPadding")
-                decryptCipher.init(Cipher.PRIVATE_KEY, prKey)
-                val deCrypted = decryptCipher.doFinal(encryptedKey)
-                var new = ""
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    new = getMimeEncoder().encodeToString(deCrypted)
-                }
-                val newDecryptedKey = unpadZerosToGetAesKey(deCrypted)
 
                 val finalData: HashMap<String, String> = hashMapOf()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

@@ -274,7 +274,7 @@ class LensFragment: Fragment(){
     }
 
     private fun getProductFromDb(response: JSONObject): MutableList<String>{
-        val product = response["products"] as JSONObject
+        val product = response["data"] as JSONObject
         val barcode = product["barcode"].toString()
         val name = product["name"].toString()
         val description = product["description"].toString()
