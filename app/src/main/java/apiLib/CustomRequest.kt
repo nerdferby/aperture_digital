@@ -8,7 +8,6 @@ import android.os.Build
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Base64.DEFAULT
-import android.util.Base64.encodeToString
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.android.volley.Response
@@ -16,14 +15,11 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.aperturedigital.R
-import lib.DatabaseChangeListener
-import lib.DatabaseConnection
 import lib.Listeners
 import org.json.JSONObject
 import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
-import java.security.SecureRandom
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64.getMimeDecoder
@@ -32,6 +28,7 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 
 class CustomRequest(listeners: Listeners, context: Context) {
@@ -116,21 +113,46 @@ class CustomRequest(listeners: Listeners, context: Context) {
         jsonBodyObj.put("apiKey", subKey)
         requestBody = jsonBodyObj.toString()
         val queue = Volley.newRequestQueue(context)
-        val jsonRequest = object : StringRequest(Method.POST, url,
+        val jsonRequest = @SuppressLint("NewApi")
+        object : StringRequest(Method.POST, url,
             Response.Listener { response ->
                 try {
+                    val convertedObject: JSONObject = JSONObject(response)
+
+                    val prefs: SharedPreferences =
+                        (context as Context).getSharedPreferences("publicKey", Context.MODE_PRIVATE)
+                    var prvKey = prefs.getString("privateKey",  "") as String
+                    prvKey = prvKey.replace("-----BEGIN PRIVATE KEY-----", "")
+                    prvKey = prvKey.replace("-----END PRIVATE KEY-----", "")
+                    val prvKeyBytes: ByteArray = Base64.decode(prvKey, DEFAULT)
+
+                    val keySpec =
+                        PKCS8EncodedKeySpec(prvKeyBytes)
+                    val keyFactory = KeyFactory.getInstance("RSA")
+//                val pubKey: RSAPublicKey = keyFactory.generatePublic(keySpec) as RSAPublicKey
+                    val prvKeyDecoded = keyFactory.generatePrivate(keySpec) //RSA KEY
+
+                    val keyDecryptCipher = Cipher.getInstance("RSA/None/PKCS1Padding")
+                    keyDecryptCipher.init(Cipher.PRIVATE_KEY, prvKeyDecoded)
+                    val keyBlock = convertedObject["keyblock"].toString()
+                    val tempByteArray = getMimeDecoder().decode(keyBlock)
+                    val decryptedKey = keyDecryptCipher.doFinal(tempByteArray)
+//                    val newDecryptedKey = unpadZerosToGetAesKey(decryptedKey)
+//                    newDecryptedKey
+
+                    val decryptedAesKey = SecretKeySpec(decryptedKey, "AES") //this is correct
+                    val encryptedDataBytes = Base64.decode(convertedObject["data"].toString(), DEFAULT)
 
                     val iv = ByteArray(16)
                     val decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-                    decryptCipher.init(Cipher.DECRYPT_MODE, aesKey, IvParameterSpec(iv))
-                    val deCrypted = decryptCipher.doFinal(response.toByteArray(Charsets.UTF_8))
-                    var decryptedRsponseData = ""
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        decryptedRsponseData = getMimeEncoder().encodeToString(deCrypted)
-                    }
-                    val convertedObject: JSONObject = JSONObject(decryptedRsponseData)
+                    decryptCipher.init(Cipher.DECRYPT_MODE, decryptedAesKey, IvParameterSpec(iv))
+                    val decryptedData = decryptCipher.doFinal(encryptedDataBytes)
+
+                    val decryptedRsponseData = Base64.encodeToString(decryptedData, DEFAULT) as String
+
+                    val finalConvertedObject: JSONObject = JSONObject(decryptedRsponseData)
                     //decrypt the response data.
-                    localListener.fireDatabaseChangeListener(convertedObject)
+                    localListener.fireDatabaseChangeListener(finalConvertedObject)
                 }catch (e: Exception){
                     val response = JSONObject()
                     response.put("error", true)
@@ -144,17 +166,11 @@ class CustomRequest(listeners: Listeners, context: Context) {
             @SuppressLint("NewApi")
             @RequiresApi(Build.VERSION_CODES.M)
             override fun getParams(): MutableMap<String, String> {
-                val keypair = generateKeyPair()
-//                val data = HashMap<String, String>()
-//                val data = HashMap<String, String>()
-                val r = SecureRandom()
+//                val keypair = generateKeyPair()
                 val iv = ByteArray(16)
-//                r.nextBytes(iv)
                 val dataJson = JSONObject()
                 dataJson.put("apiKey", subKey)
-//                data.put("apiKey", subKey)
                 paramsFromCall.forEach{
-//                    data.put(it.key, it.value)
                     dataJson.put(it.key, it.value)
                 }
 
@@ -170,36 +186,17 @@ class CustomRequest(listeners: Listeners, context: Context) {
 
                 val prefs: SharedPreferences =
                     (context as Context).getSharedPreferences("publicKey", Context.MODE_PRIVATE)
-//                prefs.edit().putString("publicKey", "").commit()
-
-
-
-//                val encryptText: ByteArray = data.toString().toByteArray(Charsets.UTF_8)
-//                val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-//
-//                cipher.init(Cipher.ENCRYPT_MODE, key /*AES KEY*/, IvParameterSpec(iv))
-//                val ciphertext: ByteArray = cipher.doFinal(encryptText)
 
                 val dataFinal = JSONObject()
-
-//                val publicKey = prefs.getString("publicKey", "") as String
-
-//                publicKey = context.getString(R.string.serverPublicKey)
+                //this one is sent to the server
                 var publicKey = prefs.getString("publicKey", "") as String
+                //this one is not
                 var serverPublicKey = context.getString(R.string.serverPublicKey)
-                publicKey = publicKey.replace("-----BEGIN PUBLIC KEY-----", "")
-                publicKey = publicKey.replace("-----END PUBLIC KEY-----", "")
-//                var decodedKey: ByteArray = ByteArray(getMimeDecoder().decode(serverPublicKey).size)
+                serverPublicKey = serverPublicKey.replace("-----BEGIN PUBLIC KEY-----", "")
+                serverPublicKey = serverPublicKey.replace("-----END PUBLIC KEY-----", "")
 
-                var decodedKey = getMimeDecoder().decode(publicKey)
+                val decodedKey = getMimeDecoder().decode(serverPublicKey)
 
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                    decodedKey =  getMimeDecoder().decode(serverPublicKey)
-//                    //sending my public key
-////                    decodedKey =  getMimeDecoder().decode(keypair.public.encoded)
-//                }
-
-//                val decodedKey: ByteArray = Base64.decode(serverPublicKey, DEFAULT)
                 val keySpec =
                     X509EncodedKeySpec(decodedKey)
                 val keyFactory = KeyFactory.getInstance("RSA")
@@ -212,10 +209,12 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 dataFinal.put("publicKey", publicKey)
                 val encryptText: ByteArray = dataFinal.toString().toByteArray(Charsets.UTF_8)
 
+                //DATA Encryption
                 val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
                 cipher.init(Cipher.ENCRYPT_MODE, aesKey /*AES KEY*/, IvParameterSpec(iv))
                 val ciphertext: ByteArray = cipher.doFinal(encryptText)
 
+                //AES KEY Encryption
                 val rsaCipher =
                     Cipher.getInstance("RSA/None/NoPadding")
                 rsaCipher.init(Cipher.PUBLIC_KEY, pubKey)//RSA Server key
@@ -232,21 +231,14 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val prKey = factor.generatePrivate(k) //RSA KEY
 
                 //DELETE THIS AND THE PRIVATE KEY ONCE TESTING IS DONE
-
-                val testKey = "kZzFu4s3x91svg+lo9+vKMzcRNY4s2yf8YgdZV0dJvHqOoPckSdji8PlxJ2uo/4hk/zOyVeJXQjN\n" +
-                        "f2vXCb/rszDmtSRDPyveCfENAl/PlffHJjd8btpSyorDUrTI7tCZaX1sXzzP9u9bZ8kY8bVeq+It\n" +
-                        "8d1ac95uwsVp/Ir1VROdrHmcaSsUNZGZxrLuqzEFxjRkfSRLV/a0W0qBV9lwLoZWckzUp3wzlRWL\n" +
-                        "r+W3NOdKRz88DXC838Cwx/s++jGQqyBFjhTPgs9zDuA1qP9S6QFZsf0JkpvrQ9XGuJr8smHmcZ41\n" +
-                        "/ykxQ/w/Peu9UVEWZYYBcDxmnq3fPuUS/warug=="
                 val decryptCipher = Cipher.getInstance("RSA/None/NoPadding")
                 decryptCipher.init(Cipher.PRIVATE_KEY, prKey)
-                val deCrypted = decryptCipher.doFinal(Base64.decode(testKey, DEFAULT))
+                val deCrypted = decryptCipher.doFinal(encryptedKey)
                 var new = ""
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     new = getMimeEncoder().encodeToString(deCrypted)
                 }
                 val newDecryptedKey = unpadZerosToGetAesKey(deCrypted)
-
 
                 val finalData: HashMap<String, String> = hashMapOf()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
