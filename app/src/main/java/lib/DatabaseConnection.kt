@@ -11,6 +11,18 @@ class DatabaseConnection(context: Context, listener: DatabaseChangeListener, lis
     val localListeners = listeners
     val key = apiKey
 
+
+    fun getPublicKey(){
+        val params = HashMap<String, String>()
+
+        params.put("keypairrequest", "true")
+        //change this to the actual database
+        val apiCall = ApiCall("gpm.digiavit.co.uk", params, mainContext, key, localListeners)
+        localListeners.addDatabaseChangeListener(dbListener)
+//        apiCall.setApiChangeListener(dbListener)
+    }
+
+
     fun getCertainProduct(gtin: String){
         val params = HashMap<String, String>()
 
@@ -22,6 +34,7 @@ class DatabaseConnection(context: Context, listener: DatabaseChangeListener, lis
 //        apiCall.setApiChangeListener(dbListener)
     }
 
+    //change this to be searchProducts and return barcode
     fun getCertainProductFromName(name: String){
         val params = HashMap<String, String>()
 

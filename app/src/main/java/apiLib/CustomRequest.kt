@@ -1,5 +1,6 @@
 package apiLib
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
@@ -15,6 +16,8 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.aperturedigital.R
+import lib.DatabaseChangeListener
+import lib.DatabaseConnection
 import lib.Listeners
 import org.json.JSONObject
 import java.security.KeyFactory
@@ -23,6 +26,7 @@ import java.security.KeyPairGenerator
 import java.security.SecureRandom
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
+import java.util.Base64.getMimeDecoder
 import java.util.Base64.getMimeEncoder
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -37,8 +41,15 @@ class CustomRequest(listeners: Listeners, context: Context) {
     val localListener = listeners
     val appContext = context
     lateinit var aesKey: SecretKey
+    var encrypted = false
 
     lateinit var requestBody: String
+
+    val listenerClass= Listeners()
+    var publicKey = ""
+    var privateKey = ""
+
+
 
     fun buildUrl(): String {
         val builder = Uri.Builder()
@@ -70,6 +81,32 @@ class CustomRequest(listeners: Listeners, context: Context) {
         return builder.build().toString()
     }
 
+    fun requestDatabaseKeys(url: String, context: Context) {
+        val queue = Volley.newRequestQueue(context)
+        val jsonRequest = object : StringRequest(Method.POST, url,
+            Response.Listener { response ->
+                val convertedObject: JSONObject = JSONObject(response)
+                //decrypt the response data.
+                localListener.fireDatabaseChangeListener(convertedObject)
+            },
+            Response.ErrorListener { error ->
+                Log.d("A", "/post request fail! Error: ${error.printStackTrace()}")
+            }) {
+            override fun getParams(): MutableMap<String, String> {
+                val dataJson = HashMap<String, String>()
+                dataJson.put("apiKey", subKey)
+
+                paramsFromCall.forEach{
+//                    data.put(it.key, it.value)
+                    dataJson.put(it.key, it.value)
+                }
+
+                return dataJson
+            }
+        }
+        queue.add(jsonRequest)
+    }
+
     fun requestDatabase(url: String, context: Context){
         /**
          * To do a post request it needs to be a string request because JsonObject does not work
@@ -82,13 +119,16 @@ class CustomRequest(listeners: Listeners, context: Context) {
         val jsonRequest = object : StringRequest(Method.POST, url,
             Response.Listener { response ->
                 try {
+
                     val iv = ByteArray(16)
                     val decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
                     decryptCipher.init(Cipher.DECRYPT_MODE, aesKey, IvParameterSpec(iv))
                     val deCrypted = decryptCipher.doFinal(response.toByteArray(Charsets.UTF_8))
-
-
-                    val convertedObject: JSONObject = JSONObject(response)
+                    var decryptedRsponseData = ""
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        decryptedRsponseData = getMimeEncoder().encodeToString(deCrypted)
+                    }
+                    val convertedObject: JSONObject = JSONObject(decryptedRsponseData)
                     //decrypt the response data.
                     localListener.fireDatabaseChangeListener(convertedObject)
                 }catch (e: Exception){
@@ -101,18 +141,20 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 Log.d("A", "/post request fail! Error: ${error.printStackTrace()}")
             }) {
 
+            @SuppressLint("NewApi")
             @RequiresApi(Build.VERSION_CODES.M)
             override fun getParams(): MutableMap<String, String> {
                 val keypair = generateKeyPair()
-                val data = HashMap<String, String>()
+//                val data = HashMap<String, String>()
+//                val data = HashMap<String, String>()
                 val r = SecureRandom()
                 val iv = ByteArray(16)
 //                r.nextBytes(iv)
                 val dataJson = JSONObject()
                 dataJson.put("apiKey", subKey)
-                data.put("apiKey", subKey)
+//                data.put("apiKey", subKey)
                 paramsFromCall.forEach{
-                    data.put(it.key, it.value)
+//                    data.put(it.key, it.value)
                     dataJson.put(it.key, it.value)
                 }
 
@@ -128,10 +170,8 @@ class CustomRequest(listeners: Listeners, context: Context) {
 
                 val prefs: SharedPreferences =
                     (context as Context).getSharedPreferences("publicKey", Context.MODE_PRIVATE)
+//                prefs.edit().putString("publicKey", "").commit()
 
-                if (prefs.getString("publicKey", "") == ""){
-                    prefs.edit().putString("publicKey", encodeToString(keypair.public.encoded, DEFAULT)).commit()
-                }
 
 
 //                val encryptText: ByteArray = data.toString().toByteArray(Charsets.UTF_8)
@@ -140,13 +180,26 @@ class CustomRequest(listeners: Listeners, context: Context) {
 //                cipher.init(Cipher.ENCRYPT_MODE, key /*AES KEY*/, IvParameterSpec(iv))
 //                val ciphertext: ByteArray = cipher.doFinal(encryptText)
 
-                val dataFinal = hashMapOf<String, String>()
-                val publicKey = prefs.getString("publicKey", "") as String
+                val dataFinal = JSONObject()
+
+//                val publicKey = prefs.getString("publicKey", "") as String
+
 //                publicKey = context.getString(R.string.serverPublicKey)
+                var publicKey = prefs.getString("publicKey", "") as String
                 var serverPublicKey = context.getString(R.string.serverPublicKey)
-                serverPublicKey = serverPublicKey.replace("-----BEGIN PUBLIC KEY----- ", "")
-                serverPublicKey = serverPublicKey.replace(" -----END PUBLIC KEY-----", "")
-                val decodedKey: ByteArray = Base64.decode(serverPublicKey, DEFAULT)
+                publicKey = publicKey.replace("-----BEGIN PUBLIC KEY-----", "")
+                publicKey = publicKey.replace("-----END PUBLIC KEY-----", "")
+//                var decodedKey: ByteArray = ByteArray(getMimeDecoder().decode(serverPublicKey).size)
+
+                var decodedKey = getMimeDecoder().decode(publicKey)
+
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                    decodedKey =  getMimeDecoder().decode(serverPublicKey)
+//                    //sending my public key
+////                    decodedKey =  getMimeDecoder().decode(keypair.public.encoded)
+//                }
+
+//                val decodedKey: ByteArray = Base64.decode(serverPublicKey, DEFAULT)
                 val keySpec =
                     X509EncodedKeySpec(decodedKey)
                 val keyFactory = KeyFactory.getInstance("RSA")
@@ -156,7 +209,7 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 val pubKey = keyFactory.generatePublic(keySpec) //RSA KEY
 
                 dataFinal.put("data", dataJson.toString())
-                dataFinal.put("publicKey", serverPublicKey)
+                dataFinal.put("publicKey", publicKey)
                 val encryptText: ByteArray = dataFinal.toString().toByteArray(Charsets.UTF_8)
 
                 val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
@@ -221,9 +274,11 @@ class CustomRequest(listeners: Listeners, context: Context) {
     fun generateKeyPair(): KeyPair {
         val generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA)
 
-        generator.initialize(2048, SecureRandom())
+        generator.initialize(1024)
         return generator.genKeyPair()
     }
+
+
 
     fun request(url: String, context: Context) {
         val queue = Volley.newRequestQueue(context)

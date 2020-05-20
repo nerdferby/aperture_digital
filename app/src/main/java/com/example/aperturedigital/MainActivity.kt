@@ -1,6 +1,8 @@
 package com.example.aperturedigital
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.MenuItem
@@ -9,6 +11,10 @@ import android.view.WindowManager
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import fragments.*
+import lib.DatabaseChangeListener
+import lib.DatabaseConnection
+import lib.Listeners
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,6 +27,7 @@ class MainActivity : AppCompatActivity() {
      * TODO: Barcode scanner
      * TODO: Vegan determine algorithm
      */
+    val listenerClass= Listeners()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +41,26 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction().replace(R.id.constraintLayoutFragment,
             LensFragment()
         ).commit()
+        val prefs: SharedPreferences =
+            applicationContext.getSharedPreferences("publicKey", Context.MODE_PRIVATE)
+        if (prefs.getString("publicKey", "") == ""){
+            val dbConnect = DatabaseConnection(applicationContext, databaseListener, listenerClass,
+                applicationContext.getString(R.string.databaseApiKey))
+            dbConnect.getPublicKey()
+
+        }
+    }
+
+    private var databaseListener = object : DatabaseChangeListener {
+        override fun onDatabaseChange(response: JSONObject) {
+            val prefs: SharedPreferences =
+                applicationContext.getSharedPreferences("publicKey", Context.MODE_PRIVATE)
+            prefs.edit().putString("publicKey", response["public"] as String).commit()
+            prefs.edit().putString("privateKey", response["private"] as String).commit()
+            prefs.getString("privateKey", "")
+            prefs.getString("publicKey", "")
+        }
+
     }
 
     private val navListener = BottomNavigationView.OnNavigationItemSelectedListener(object: (MenuItem) ->

@@ -33,6 +33,10 @@ class ApiCall(baseUrl: String, paramsPassed: HashMap<String, String>, context: C
         request.subKey = key
         request.paramsFromCall = prams
         val url = request.buildUrl()
-        request.requestDatabase(url, activityContext)
+        if (prams.contains("keypairrequest")){
+            request.requestDatabaseKeys(url, activityContext)
+        }else{
+            request.requestDatabase(url, activityContext)
+        }
     }
 }
