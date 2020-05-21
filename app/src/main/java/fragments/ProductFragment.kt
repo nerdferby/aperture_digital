@@ -22,10 +22,7 @@ class ProductFragment: Fragment() {
     lateinit var currentContext: Context
     var productName = ""
     var productBarcode = ""
-
-    val listenerClass = Listeners()
     val veganListenerClass = Listeners()
-
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -46,21 +43,21 @@ class ProductFragment: Fragment() {
         view.findViewById<TextView>(R.id.textViewVegan).text = ""
     }
 
-    /**
-     * First get the info of the product from the database
-     * Check if it is vegan from the barcode
-     */
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        currentContext = context
+    }
 
     private fun checkVeganDb(barcode: String){
         val db = DatabaseConnection(context as Context, databaseVeganListener, veganListenerClass, (context as Context).getString(R.string.databaseApiKey))
         db.isVegan(barcode)
     }
 
-    val databaseVeganListener = object: DatabaseChangeListener{
+    private val databaseVeganListener = object: DatabaseChangeListener{
         override fun onDatabaseChange(response: JSONObject) {
             val textViewVegan = view!!.findViewById<TextView>(R.id.textViewVegan)
             //return if the product is vegan or not
-            if (response["products"].toString() == "1"){
+            if (response["data"].toString() == "IS_VEGAN"){
                 textViewVegan.text = "Vegan"
             }else if(response["products"].toString() == "0"){
                 textViewVegan.text = "Not Vegan"
@@ -69,11 +66,4 @@ class ProductFragment: Fragment() {
             }
         }
     }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        currentContext = context
-
-    }
-
 }

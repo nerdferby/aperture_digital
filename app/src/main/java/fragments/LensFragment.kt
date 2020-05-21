@@ -21,6 +21,8 @@ import kotlinx.android.synthetic.main.fragment_lens.*
 import lib.*
 import org.json.JSONArray
 import org.json.JSONObject
+import org.jsoup.Jsoup
+import java.util.Collections.replaceAll
 
 class LensFragment: Fragment(){
 
@@ -48,6 +50,8 @@ class LensFragment: Fragment(){
 //            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
 //            scannerBtn.visibility = View.INVISIBLE
 //            checkDb(currentBarcode)
+            //TESTING REMOVE LATER
+            productCheckIndex = 1
             checkApis(currentBarcode)
         }
         return rootView
@@ -98,6 +102,7 @@ class LensFragment: Fragment(){
          * This goes through the database then the apis to check for the product.
          * If none is found then return that no product was found
          */
+
         if(productCheckIndex == 0){
             checkDb(barcode)
         }else if(productCheckIndex == 1){
@@ -165,6 +170,7 @@ class LensFragment: Fragment(){
                     finalString += finalData[i] + "\n" + "\n"
                     Log.d(constantClass.DEBUGTAG, finalData[i])
                 }
+                //FOR TESTING to see where the data came from.
                 finalString += "\nDatabase"
                 updateText(finalString)
             }
@@ -224,7 +230,23 @@ class LensFragment: Fragment(){
                 }
                 finalString += "\nAPI"
                 updateText(finalString)
-                addFoundProductDb(mutableListOf(currentBarcode, finalData[0], "", finalData[1], finalData[2]))
+                val reg = Regex("\\(.*?\\)")
+                val htmlSymbolReg = Regex("\\<.*?\\>")
+                val squareSymbolReg = Regex("\\[.*?\\]")
+                var newIngredients = Jsoup.parse(finalData[2]).text()
+                newIngredients = newIngredients.replace(reg,"").replace(htmlSymbolReg,"")
+                /**
+                 * Maybe replace [] with commas and remove white space before commas and after commas.
+                 */
+
+//                newIngredients = newIngredients.replace(htmlSymbolReg,"")
+//                newIngredients = newIngredients.replace(squareSymbolReg,"")
+                //TESTING
+                newIngredients = newIngredients.toLowerCase()
+
+                finalData[2] //INGREDIENTS
+
+//                addFoundProductDb(mutableListOf(currentBarcode, finalData[0], "", finalData[1], finalData[2]))
 
             }
         }

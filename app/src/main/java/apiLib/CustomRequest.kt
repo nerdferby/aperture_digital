@@ -36,17 +36,9 @@ class CustomRequest(listeners: Listeners, context: Context) {
     var paramsFromCall: HashMap<String, String> = hashMapOf()
     lateinit var subKey: String
     val localListener = listeners
-    val appContext = context
     lateinit var aesKey: SecretKey
-    var encrypted = false
 
     lateinit var requestBody: String
-
-    val listenerClass= Listeners()
-    var publicKey = ""
-    var privateKey = ""
-
-
 
     fun buildUrl(): String {
         val builder = Uri.Builder()
@@ -92,12 +84,9 @@ class CustomRequest(listeners: Listeners, context: Context) {
             override fun getParams(): MutableMap<String, String> {
                 val dataJson = HashMap<String, String>()
                 dataJson.put("apiKey", subKey)
-
                 paramsFromCall.forEach{
-//                    data.put(it.key, it.value)
                     dataJson.put(it.key, it.value)
                 }
-
                 return dataJson
             }
         }
@@ -187,7 +176,6 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 serverPublicKey = serverPublicKey.replace("-----END PUBLIC KEY-----", "")
 
                 val decodedKey = getMimeDecoder().decode(serverPublicKey)
-
                 val keySpec =
                     X509EncodedKeySpec(decodedKey)
                 val keyFactory = KeyFactory.getInstance("RSA")
@@ -214,10 +202,7 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     finalData.put("data", getMimeEncoder().encodeToString(ciphertext))
                     finalData.put("keyblock", getMimeEncoder().encodeToString(encryptedKey))
-//                    val phpEncoded = getMimeEncoder().encodeToString(ciphertext)
                 }
-//                finalData.put("data", encodeToString(ciphertext, DEFAULT))
-//                finalData.put("keyblock", encodeToString(encryptedKey, DEFAULT))
                 return finalData
             }
         }

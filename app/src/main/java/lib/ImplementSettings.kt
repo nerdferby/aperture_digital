@@ -22,7 +22,6 @@ class ImplementSettings(context: Context) {
 
     fun changeToPreference(layout: ConstraintLayout, fragment: String){
         changeLayoutColor(layout, fragment)
-
     }
 
     private fun changeLayoutColor(layout: ConstraintLayout, fragment: String){
@@ -96,20 +95,6 @@ class ImplementSettings(context: Context) {
             }
 
         }
-//        else if (component is ListView){
-//            if(colorTheme == 1){
-//                val view = (LayoutInflater.from(currentContext)).inflate(R.layout.activity_listview, null) as View
-//                view.findViewById<TextView>(R.id.textView).setTextColor(Color.BLACK)
-//            }else if(colorTheme == 2){
-//                val view = (LayoutInflater.from(currentContext)).inflate(R.layout.activity_listview, null) as ViewGroup
-//                if (view.childCount > 1){
-//                    (view.getChildAt(1) as TextView).setTextColor(ContextCompat.getColor(currentContext, R.color.darkModeWhite))
-//                }
-//            }else if(colorTheme == 3){
-//                val view = (LayoutInflater.from(currentContext)).inflate(R.layout.activity_listview, null) as View
-//                view.findViewById<TextView>(R.id.textView).setTextColor(Color.BLACK)
-//            }
-//        }
     }
 
     fun changeTextColor(layout: ConstraintLayout){
@@ -124,7 +109,6 @@ class ImplementSettings(context: Context) {
                     }
                 }
             }
-
             if (component != null){
                 checkComponents(component, colorTheme)
             }

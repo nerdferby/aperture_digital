@@ -31,7 +31,6 @@ class BarcodeFragment(listeners: Listeners): Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         startBarcode()
-
     }
 
     override fun onAttach(context: Context) {
@@ -41,9 +40,7 @@ class BarcodeFragment(listeners: Listeners): Fragment() {
     }
 
     private fun startBarcode(){
-
         val barcodeCapture = this.childFragmentManager.fragments[0] as BarcodeCapture
-
         val scanner =
             BarcodeScanner(currentContext, (barcodeCapture as BarcodeCapture?), listenerClass)
         listenerClass.addBarcodeChangeListener(barcodeListenerInp)
@@ -53,7 +50,6 @@ class BarcodeFragment(listeners: Listeners): Fragment() {
         lib.BarcodeChangeListener {
         override fun onBarcode(response: String) {
             Log.d(constantClass.DEBUGTAG, response)
-
             this@BarcodeFragment.childFragmentManager.beginTransaction().remove(
                 this@BarcodeFragment.childFragmentManager.fragments[0])
             activity!!.runOnUiThread{
