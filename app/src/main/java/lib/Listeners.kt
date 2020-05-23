@@ -6,6 +6,7 @@ class Listeners {
     private val onApiChangeListeners = mutableListOf<ApiChangeListener>()
     private val onBarcodeChangeListener = mutableListOf<BarcodeChangeListener>()
     private val onDatabaseListeners = mutableListOf<DatabaseChangeListener>()
+    private val onDatabaseVeganListeners = mutableListOf<DatabaseChangeListener>()
     private val onDatabaseInsertListeners = mutableListOf<DatabaseChangeListener>()
 
     fun addApiChangeListener(listener: ApiChangeListener){
@@ -26,6 +27,18 @@ class Listeners {
         onDatabaseListeners.forEach{
             it.onDatabaseChange(response)
         }
+//        onDatabaseListeners[onDatabaseListeners.count()-1].onDatabaseChange(response)
+    }
+
+    fun addVeganDatabaseChangeListener(listener: DatabaseChangeListener){
+        onDatabaseVeganListeners.add(listener)
+    }
+
+    fun fireVeganDatabaseChangeListener(response: JSONObject){
+//        onDatabaseVeganListeners.forEach{
+//            it.onDatabaseChange(response)
+//        }
+        onDatabaseVeganListeners[onDatabaseVeganListeners.count()-1].onDatabaseChange(response)
     }
 
     fun addDatabaseInsertListener(listener: DatabaseChangeListener){

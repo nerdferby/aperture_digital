@@ -74,8 +74,8 @@ class DatabaseConnection(context: Context, listener: DatabaseChangeListener, lis
         params.put("barcode", barcode)
 
         //change this to the actual database
-        val apiCall = ApiCall("gpm.digiavit.co.uk", params, mainContext, key, localListeners)
-        localListeners.addDatabaseChangeListener(dbListener)
+        val apiCall = ApiCall("gpm.digiavit.co.uk", params, mainContext, key, localListeners, true)
+        localListeners.addVeganDatabaseChangeListener(dbListener)
 //        apiCall.setApiChangeListener(dbListener)
     }
 
