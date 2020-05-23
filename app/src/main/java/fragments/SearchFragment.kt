@@ -148,7 +148,7 @@ class SearchFragment: Fragment() {
         override fun onDatabaseChange(response: JSONObject) {
             suggestionNameList.clear()
             val products = response["data"] as JSONArray
-            for (index in 0 .. products.length()){
+            for (index in 0 until products.length()){
                 val product = products.get(index) as JSONObject
                 suggestionNameList.add(product["name"].toString())
 

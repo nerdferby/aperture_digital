@@ -9,4 +9,6 @@
 
     <color name="colorModeMain">#29b4cc</color>
     <color name="colorModeText">#050505</color>
+    <color name="notVeganColor">#f04d5a</color>
+    <color name="veganColor">#4df08b</color>
 </resources>

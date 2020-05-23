@@ -43,6 +43,10 @@ class MainActivity : AppCompatActivity() {
         ).commit()
         val prefs: SharedPreferences =
             applicationContext.getSharedPreferences("publicKey", Context.MODE_PRIVATE)
+//        prefs.edit().remove("publicKey").commit()
+//        prefs.edit().remove("privateKey").commit()
+//        prefs.getString("publickey", "")
+//        prefs
         if (prefs.getString("publicKey", "") == ""){
             val dbConnect = DatabaseConnection(applicationContext, databaseListener, listenerClass,
                 applicationContext.getString(R.string.databaseApiKey))

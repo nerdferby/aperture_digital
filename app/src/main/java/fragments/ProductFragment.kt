@@ -1,15 +1,16 @@
 package fragments
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import com.example.aperturedigital.R
 import kotlinx.android.synthetic.main.fragment_product.*
-import kotlinx.android.synthetic.main.fragment_search.*
 import lib.DatabaseChangeListener
 import lib.DatabaseConnection
 import lib.ImplementSettings
@@ -54,16 +55,21 @@ class ProductFragment: Fragment() {
     }
 
     private val databaseVeganListener = object: DatabaseChangeListener{
+        @SuppressLint("NewApi")
         override fun onDatabaseChange(response: JSONObject) {
             val textViewVegan = view!!.findViewById<TextView>(R.id.textViewVegan)
-            //return if the product is vegan or not
+            val backgroundLayout = rootView.findViewById<ConstraintLayout>(R.id.constraintLayoutProductContent)
             if (response["data"].toString() == "IS_VEGAN"){
                 textViewVegan.text = "Vegan"
-            }else if(response["products"].toString() == "0"){
-                textViewVegan.text = "Not Vegan"
+                backgroundLayout.setBackgroundColor(context!!.getColor(R.color.veganColor))
+            }else if(response["data"].toString() == "NOT_VEGAN"){
+                textViewVegan.text  = "Not Vegan"
+                backgroundLayout.setBackgroundColor(context!!.getColor(R.color.notVeganColor))
             }else{
                 textViewVegan.text = "We are not sure if this product is vegan"
             }
+
+
         }
     }
 }

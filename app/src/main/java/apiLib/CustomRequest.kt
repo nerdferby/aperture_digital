@@ -106,6 +106,8 @@ class CustomRequest(listeners: Listeners, context: Context) {
         object : StringRequest(Method.POST, url,
             Response.Listener { response ->
                 try {
+                    //for testing
+//                    val responseTest = ""
                     val convertedObject: JSONObject = JSONObject(response)
                     val prefs: SharedPreferences =
                         (context as Context).getSharedPreferences("publicKey", Context.MODE_PRIVATE)
@@ -139,9 +141,9 @@ class CustomRequest(listeners: Listeners, context: Context) {
                     //decrypt the response data.
                     localListener.fireDatabaseChangeListener(finalConvertedObject)
                 }catch (e: Exception){
-                    val response = JSONObject()
-                    response.put("error", true)
-                    localListener.fireDatabaseInsertListener(response)
+                    val newResponse = JSONObject()
+                    newResponse.put("error", true)
+                    localListener.fireDatabaseChangeListener(newResponse)
                 }
             },
             Response.ErrorListener { error ->
@@ -244,5 +246,6 @@ class CustomRequest(listeners: Listeners, context: Context) {
             }
         }
         queue.add(jsonRequest)
+
     }
 }
