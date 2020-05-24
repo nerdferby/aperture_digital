@@ -163,17 +163,20 @@ class SearchFragment: Fragment() {
 
     private var databaseSearchListeners = object: DatabaseChangeListener {
         override fun onDatabaseChange(response: JSONObject) {
-            val products = response["data"] as JSONArray
-            val productsList = mutableListOf<String>()
+            if (response.has("data")){
+                val products = response["data"] as JSONArray
+                val productsList = mutableListOf<String>()
 
-            for (index in 0 until products.length()){
-                val product = products.get(index) as JSONObject
-                productsList.add(product["name"].toString())
-                productBarcodes.add(product["barcode"].toString())
+                for (index in 0 until products.length()){
+                    val product = products.get(index) as JSONObject
+                    productsList.add(product["name"].toString())
+                    productBarcodes.add(product["barcode"].toString())
+                }
+                val customAdapter = CustomAdapter(context as Context, productsList)
+                val listViewProduct = view!!.findViewById<ListView>(R.id.productList)
+                listViewProduct.adapter = customAdapter
             }
-            val customAdapter = CustomAdapter(context as Context, productsList)
-            val listViewProduct = view!!.findViewById<ListView>(R.id.productList)
-            listViewProduct.adapter = customAdapter
+
         }
     }
 

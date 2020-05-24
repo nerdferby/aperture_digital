@@ -2,11 +2,21 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/darker_gray"
     android:id="@+id/constraintLayoutProductContent">
 
+    <ProgressBar
+        android:id="@+id/progressBarProduct"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <TextView
         android:id="@+id/textViewProductName"
@@ -14,20 +24,34 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:text="Product Name"
-        android:textSize="30sp"
+        android:textSize="40sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:fontFamily="sans-serif"
+        android:textStyle="bold"/>
+
 
     <TextView
         android:id="@+id/textViewVegan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Product Fragment"
-        android:textSize="30sp"
+        android:textSize="35sp"
+        app:fontFamily="sans-serif"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewProductName" />
+        app:layout_constraintTop_toTopOf="@+id/progressBarProduct" />
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="131dp"
+        android:layout_height="189dp"
+        app:layout_constraintBottom_toTopOf="@+id/textViewVegan"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewProductName"
+        app:srcCompat="@drawable/final_tick" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,6 +5,7 @@ import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -19,14 +20,17 @@ import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import apiLib.ApiCall
 import com.example.aperturedigital.R
+import kotlinx.android.synthetic.main.fragment_barcode_scanner.*
 import kotlinx.android.synthetic.main.fragment_lens.*
 import lib.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.jsoup.Jsoup
+import java.lang.reflect.Type
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -60,22 +64,22 @@ class LensFragment: Fragment(){
         //5057545618332
         scannerBtn= (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
         scannerBtn.setOnClickListener {
-//            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
-//            scannerBtn.visibility = View.INVISIBLE
+            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
+            scannerBtn.visibility = View.INVISIBLE
 //            checkDb(currentBarcode)
             //TESTING REMOVE LATER
 //            productCheckIndex = 1
-            val mainLayout = rootView.findViewById<ConstraintLayout>(R.id.constraintLayoutContent)
-            var stillContains = false
-            while (!stillContains){
-                if (mainLayout.getChildAt(0).id != R.id.progressBarLens){
-                    mainLayout.removeViewAt(0)
-                }else {
-                    stillContains = true
-                }
-            }
-            rootView.findViewById<ProgressBar>(R.id.progressBarLens).visibility = View.VISIBLE
-            checkApis(currentBarcode)
+//            val mainLayout = rootView.findViewById<ConstraintLayout>(R.id.constraintLayoutContent)
+//            var stillContains = false
+//            while (!stillContains){
+//                if (mainLayout.getChildAt(0).id != R.id.progressBarLens){
+//                    mainLayout.removeViewAt(0)
+//                }else {
+//                    stillContains = true
+//                }
+//            }
+//            rootView.findViewById<ProgressBar>(R.id.progressBarLens).visibility = View.VISIBLE
+//            checkApis(currentBarcode)
         }
         return rootView
     }
@@ -316,9 +320,14 @@ class LensFragment: Fragment(){
         val nameTxt = TextView(currentContext)
         nameTxt.text = nameString
         nameTxt.textSize = 40f
+        val fontName = ResourcesCompat.getFont(context as Context, R.font.open_sans_bold)
+        nameTxt.typeface = fontName
         val barcodeText = TextView(currentContext)
         barcodeText.text = responseText
         barcodeText.textSize = 35f
+        barcodeText.text
+        val fontVegan = ResourcesCompat.getFont(context as Context, R.font.open_sans_regular)
+        barcodeText.setTypeface(fontVegan, Typeface.BOLD)
         if (notSure){
             val settings = ImplementSettings(context as Context)
             settings.changeToPreference(constraintLayoutContent, "Lens")
@@ -340,13 +349,40 @@ class LensFragment: Fragment(){
         (rootView as ViewGroup).addView(nameTxt)
         barcodeText.gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
 
+        val lp = RelativeLayout.LayoutParams(400, 400)
+        val layout = RelativeLayout(currentContext)
+        val imageView = ImageView(currentContext)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            if (imageView.id == -1){
+                imageView.id = View.generateViewId()
+            }
+            if (layout.id == -1){
+                layout.id = View.generateViewId()
+            }
+
+        }
+        imageView.layoutParams = lp
+        layout.addView(imageView)
+
+//        imageView.layoutParams.
+        if (tickOrCross == 1){
+            imageView.setImageResource(R.drawable.final_tick)
+        }else if(tickOrCross == 0){
+            imageView.setImageResource(R.drawable.final_cross)
+        }else{
+            //-1
+        }
+        (rootView as ViewGroup).addView(layout)
+        layout.gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
+
+
         val nameSet = ConstraintSet()
         nameSet.clone((rootView as ViewGroup).findViewById<ConstraintLayout>(R.id.constraintLayoutContent))
         nameSet.connect(nameTxt.id,
             ConstraintSet.TOP,
             ConstraintSet.PARENT_ID,
             ConstraintSet.TOP,
-            60
+            200
         )
         nameSet.connect(
             nameTxt.id,
@@ -370,8 +406,8 @@ class LensFragment: Fragment(){
         set.clone((rootView as ViewGroup).findViewById<ConstraintLayout>(R.id.constraintLayoutContent))
         set.connect(barcodeText.id,
             ConstraintSet.TOP,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.TOP
+            layout.id,
+            ConstraintSet.BOTTOM
         )
         set.connect(
             barcodeText.id,
@@ -389,38 +425,11 @@ class LensFragment: Fragment(){
             barcodeText.id,
             ConstraintSet.BOTTOM,
             ConstraintSet.PARENT_ID,
-            ConstraintSet.BOTTOM
+            ConstraintSet.BOTTOM,
+            200
         )
-
-
-        val lp = RelativeLayout.LayoutParams(300, 300)
-        val layout = RelativeLayout(currentContext)
         set.applyTo((rootView as ViewGroup).findViewById(R.id.constraintLayoutContent))
-        val imageView = ImageView(currentContext)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            if (imageView.id == -1){
-                imageView.id = View.generateViewId()
-            }
-            if (layout.id == -1){
-                layout.id = View.generateViewId()
-            }
 
-        }
-
-
-        imageView.layoutParams = lp
-        layout.addView(imageView)
-
-//        imageView.layoutParams.
-        if (tickOrCross == 1){
-            imageView.setImageResource(R.drawable.tick)
-        }else if(tickOrCross == 0){
-            imageView.setImageResource(R.drawable.cross)
-        }else{
-            //-1
-        }
-        (rootView as ViewGroup).addView(layout)
-        layout.gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
 
         val imageSet = ConstraintSet()
         imageSet.clone((rootView as ViewGroup).findViewById<ConstraintLayout>(R.id.constraintLayoutContent))
@@ -524,13 +533,15 @@ class LensFragment: Fragment(){
                 val backgroundLayout = rootView.findViewById<ConstraintLayout>(R.id.constraintLayoutContent)
 //                finalString += "\n\n\n"
                 if (response.has("data")){
+                    backgroundLayout.setBackgroundColor(context!!.getColor(R.color.productColor))
+
                     if (response["data"].toString() == "IS_VEGAN"){
                         veganStr = "This product is Vegan"
                         tickOrCross = 1
-                        backgroundLayout.setBackgroundColor(context!!.getColor(R.color.veganColor))
+//                        backgroundLayout.setBackgroundColor(context!!.getColor(R.color.veganColor))
                     }else if(response["data"].toString() == "NOT_VEGAN"){
                         veganStr = "This product is Not Vegan"
-                        backgroundLayout.setBackgroundColor(context!!.getColor(R.color.notVeganColor))
+//                        backgroundLayout.setBackgroundColor(context!!.getColor(R.color.notVeganColor))
                         tickOrCross = 0
                     }else{
                         veganStr = "We are not sure if this product is vegan"

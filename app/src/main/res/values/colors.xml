@@ -11,4 +11,5 @@
     <color name="colorModeText">#050505</color>
     <color name="notVeganColor">#f04d5a</color>
     <color name="veganColor">#4df08b</color>
+    <color name="productColor">#cef5d8</color>
 </resources>

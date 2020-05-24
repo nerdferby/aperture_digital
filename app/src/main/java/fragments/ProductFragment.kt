@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.forEach
 import androidx.fragment.app.Fragment
 import com.example.aperturedigital.R
 import kotlinx.android.synthetic.main.fragment_product.*
@@ -35,6 +36,12 @@ class ProductFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        for (i in 0 until constraintLayoutProductContent.childCount){
+            constraintLayoutProductContent.getChildAt(i).visibility = View.INVISIBLE
+        }
+        progressBarProduct.visibility = View.VISIBLE
+
+
         val textViewProduct = view.findViewById<TextView>(R.id.textViewProductName)
         val settings = ImplementSettings(context as Context)
         settings.changeToPreference(constraintLayoutProductContent, "Search")
@@ -59,16 +66,31 @@ class ProductFragment: Fragment() {
         override fun onDatabaseChange(response: JSONObject) {
             val textViewVegan = view!!.findViewById<TextView>(R.id.textViewVegan)
             val backgroundLayout = rootView.findViewById<ConstraintLayout>(R.id.constraintLayoutProductContent)
-            if (response["data"].toString() == "IS_VEGAN"){
-                textViewVegan.text = "Vegan"
-                backgroundLayout.setBackgroundColor(context!!.getColor(R.color.veganColor))
-            }else if(response["data"].toString() == "NOT_VEGAN"){
-                textViewVegan.text  = "Not Vegan"
-                backgroundLayout.setBackgroundColor(context!!.getColor(R.color.notVeganColor))
-            }else{
-                textViewVegan.text = "We are not sure if this product is vegan"
-            }
 
+            for (i in 0 until constraintLayoutProductContent.childCount){
+                constraintLayoutProductContent.getChildAt(i).visibility = View.VISIBLE
+            }
+            progressBarProduct.visibility = View.INVISIBLE
+            if (response.has("data")){
+                if (response["data"].toString() == "IS_VEGAN"){
+                    imageView2.visibility = View.VISIBLE
+                    imageView2.setImageResource(R.drawable.final_tick)
+                    textViewVegan.text = "This product is Vegan"
+                    backgroundLayout.setBackgroundColor(context!!.getColor(R.color.productColor))
+                }else if(response["data"].toString() == "NOT_VEGAN"){
+                    imageView2.visibility = View.VISIBLE
+                    imageView2.setImageResource(R.drawable.final_cross)
+                    textViewVegan.text  = "This product is Not Vegan"
+                    backgroundLayout.setBackgroundColor(context!!.getColor(R.color.productColor))
+                }else{
+                    imageView2.visibility = View.INVISIBLE
+                    textViewVegan.text = "We are not sure if this product is vegan"
+                }
+            }else{
+                imageView2.visibility = View.INVISIBLE
+                textViewProductName.text = ""
+                textViewVegan.text = "No Product found"
+            }
 
         }
     }
