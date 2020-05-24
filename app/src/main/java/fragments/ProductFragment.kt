@@ -25,30 +25,40 @@ class ProductFragment: Fragment() {
     var productName = ""
     var productBarcode = ""
     val veganListenerClass = Listeners()
+    var noProductFound = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.fragment_product, container, false)
-        productName = requireArguments().getString("productName") as String
-        productBarcode = requireArguments().getString("productBarcode") as String
+        if (requireArguments().getString("productName") == null || requireArguments().getString("productBarcode") == null){
+            noProductFound = true
+        }else{
+            productName = requireArguments().getString("productName") as String
+            productBarcode = requireArguments().getString("productBarcode") as String
+            noProductFound = false
+        }
+
         return rootView
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        for (i in 0 until constraintLayoutProductContent.childCount){
-            constraintLayoutProductContent.getChildAt(i).visibility = View.INVISIBLE
-        }
-        progressBarProduct.visibility = View.VISIBLE
-
-
         val textViewProduct = view.findViewById<TextView>(R.id.textViewProductName)
-        val settings = ImplementSettings(context as Context)
-        settings.changeToPreference(constraintLayoutProductContent, "Search")
-        settings.changeTextColor(constraintLayoutProductContent)
-        textViewProduct.text = productName
-        checkVeganDb(productBarcode)
-        view.findViewById<TextView>(R.id.textViewVegan).text = ""
+
+        if (noProductFound){
+            textViewProduct.text = "No product found"
+        }else{
+            for (i in 0 until constraintLayoutProductContent.childCount){
+                constraintLayoutProductContent.getChildAt(i).visibility = View.INVISIBLE
+            }
+            progressBarProduct.visibility = View.VISIBLE
+            val settings = ImplementSettings(context as Context)
+            settings.changeToPreference(constraintLayoutProductContent, "Search")
+            settings.changeTextColor(constraintLayoutProductContent)
+            textViewProduct.text = productName
+            checkVeganDb(productBarcode)
+            view.findViewById<TextView>(R.id.textViewVegan).text = ""
+        }
     }
 
     override fun onAttach(context: Context) {
