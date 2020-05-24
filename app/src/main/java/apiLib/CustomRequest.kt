@@ -182,7 +182,6 @@ class CustomRequest(listeners: Listeners, context: Context) {
                 var serverPublicKey = context.getString(R.string.serverPublicKey)
                 serverPublicKey = serverPublicKey.replace("-----BEGIN PUBLIC KEY-----", "")
                 serverPublicKey = serverPublicKey.replace("-----END PUBLIC KEY-----", "")
-
                 val decodedKey = getMimeDecoder().decode(serverPublicKey)
                 val keySpec =
                     X509EncodedKeySpec(decodedKey)

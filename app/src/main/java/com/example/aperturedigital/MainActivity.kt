@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
 //        prefs.edit().remove("privateKey").commit()
 //        prefs.getString("publickey", "")
 //        prefs
+        //add back
         if (prefs.getString("publicKey", "") == ""){
             val dbConnect = DatabaseConnection(applicationContext, databaseListener, listenerClass,
                 applicationContext.getString(R.string.databaseApiKey))
