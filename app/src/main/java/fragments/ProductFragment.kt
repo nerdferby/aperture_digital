@@ -46,7 +46,10 @@ class ProductFragment: Fragment() {
         val textViewProduct = view.findViewById<TextView>(R.id.textViewProductName)
 
         if (noProductFound){
-            textViewProduct.text = "No product found"
+            textViewProduct.text = ""
+            textViewVegan.text = "No Product found"
+            imageView2.visibility = View.INVISIBLE
+            progressBarProduct.visibility = View.INVISIBLE
         }else{
             for (i in 0 until constraintLayoutProductContent.childCount){
                 constraintLayoutProductContent.getChildAt(i).visibility = View.INVISIBLE
