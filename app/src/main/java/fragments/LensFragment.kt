@@ -78,8 +78,8 @@ class LensFragment: Fragment(){
 //                    stillContains = true
 //                }
 //            }
-            rootView.findViewById<ProgressBar>(R.id.progressBarLens).visibility = View.VISIBLE
-            checkApis(currentBarcode)
+//            rootView.findViewById<ProgressBar>(R.id.progressBarLens).visibility = View.VISIBLE
+//            checkApis(currentBarcode)
         }
         return rootView
     }
