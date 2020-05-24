@@ -64,20 +64,20 @@ class LensFragment: Fragment(){
         //5057545618332
         scannerBtn= (rootView as ViewGroup).findViewById<Button>(R.id.startBarcodeScannerBtn)
         scannerBtn.setOnClickListener {
-//            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
-//            scannerBtn.visibility = View.INVISIBLE
+            this.childFragmentManager.beginTransaction().replace(R.id.constraintLayoutContent, barcodeFragmentLocal).commit()
+            scannerBtn.visibility = View.INVISIBLE
 //            checkDb(currentBarcode)
             //TESTING REMOVE LATER
 //            productCheckIndex = 1
-            val mainLayout = rootView.findViewById<ConstraintLayout>(R.id.constraintLayoutContent)
-            var stillContains = false
-            while (!stillContains){
-                if (mainLayout.getChildAt(0).id != R.id.progressBarLens){
-                    mainLayout.removeViewAt(0)
-                }else {
-                    stillContains = true
-                }
-            }
+//            val mainLayout = rootView.findViewById<ConstraintLayout>(R.id.constraintLayoutContent)
+//            var stillContains = false
+//            while (!stillContains){
+//                if (mainLayout.getChildAt(0).id != R.id.progressBarLens){
+//                    mainLayout.removeViewAt(0)
+//                }else {
+//                    stillContains = true
+//                }
+//            }
             rootView.findViewById<ProgressBar>(R.id.progressBarLens).visibility = View.VISIBLE
             checkApis(currentBarcode)
         }
